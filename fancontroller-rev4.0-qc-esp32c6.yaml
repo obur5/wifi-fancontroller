@@ -4,11 +4,6 @@
 # This file contains the core ESPHome configuration and includes
 # the hardware-specific package for revision 4.0
 
-esp32:
-  board: esp32-c6-devkitc-1
-  framework:
-    type: esp-idf
-
 packages:
   # Include hardware-specific configuration
   hardware: !include hardware-rev-4.0.yaml

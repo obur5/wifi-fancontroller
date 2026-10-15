@@ -1,5 +1,5 @@
 # WiFi Fan Controller Hardware Package - Revision 4.0
-# Hardware: ESP32-C6, esp32-c6-devkitc-1 board
+# Hardware: ESP32-C6-MINI-1-N4 (4MB flash), esp32-c6-devkitm-1 board
 # This package contains all hardware-specific configuration
 #
 # Usage (local):
@@ -13,6 +13,16 @@
 packages:
   globals: !include modules/globals.yaml
 
+# Board, flash and framework are part of the hardware definition here
+# (unlike Rev 1.0-3.3, where the firmware configs set them).
+# ESP32-C6-MINI-1-N4 module: 4MB flash.
+# Never change the framework once this revision has shipped.
+esp32:
+  board: esp32-c6-devkitm-1
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+
 # Globals
 globals:
   - id: init_done
@@ -23,71 +33,75 @@ globals:
 # Boot sequence: Status LED blue blinking
 esphome:
   on_boot:
-    then:
-      - lambda: |-
-          auto call = id(status_led).turn_on();
-          call.set_rgb(0.0, 0.0, 1.0); // blue
-          call.set_brightness(0.5);
-          call.set_effect("pulse");
-          call.perform();
-      - if:
-          condition:
-            lambda: 'return !id(init_done);'
-          then:
-            - lambda: 'id(init_done) = true;'
+    - then:
+        - lambda: |-
+            auto call = id(status_led).turn_on();
+            call.set_rgb(0.0, 0.0, 1.0); // blue
+            call.set_brightness(0.5);
+            call.set_effect("pulse");
+            call.perform();
+        - if:
+            condition:
+              lambda: 'return !id(init_done);'
+            then:
+              - lambda: 'id(init_done) = true;'
 
 # WiFi status callbacks
 wifi:
   on_connect:
-    then:
-      - lambda: |-
-          auto call = id(status_led).turn_on();
-          call.set_rgb(0.0, 1.0, 0.0); // green
-          call.set_brightness(0.5);
-          call.set_effect("none");
-          call.perform();
-      - delay: 60s
-      - lambda: |-
-          auto call = id(status_led).turn_on();
-          call.set_rgb(0.0, 1.0, 0.0); // green
-          call.set_brightness(0.1);
-          call.set_effect("none");
-          call.perform();
+    - then:
+        - lambda: |-
+            auto call = id(status_led).turn_on();
+            call.set_rgb(0.0, 1.0, 0.0); // green
+            call.set_brightness(0.5);
+            call.set_effect("none");
+            call.perform();
+        - delay: 60s
+        - lambda: |-
+            auto call = id(status_led).turn_on();
+            call.set_rgb(0.0, 1.0, 0.0); // green
+            call.set_brightness(0.1);
+            call.set_effect("none");
+            call.perform();
 
   on_disconnect:
-    then:
-      - lambda: |-
-          auto call = id(status_led).turn_on();
-          call.set_rgb(1.0, 0.0, 0.0); // red
-          call.set_brightness(0.25);
-          call.set_effect("pulse");
-          call.perform();
+    - then:
+        - lambda: |-
+            auto call = id(status_led).turn_on();
+            call.set_rgb(1.0, 0.0, 0.0); // red
+            call.set_brightness(0.25);
+            call.set_effect("pulse");
+            call.perform();
 
 # I2C Bus
 i2c:
-  sda: GPIO21
-  scl: GPIO22
-  scan: true
-  id: bus_a
+  - id: bus_a
+    sda: GPIO21
+    scl: GPIO22
+    scan: true
 
 # PWM Outputs for fans (internal only)
 output:
   - platform: ledc
-    pin: GPIO01
+    pin: GPIO00
     id: pwm_fan1
     frequency: "25000 Hz"
-  - platform: ledc
-    pin: GPIO00
-    id: pwm_fan2
-    frequency: "25000 Hz"
-  - platform: ledc
-    pin: GPIO07
-    id: pwm_fan3
-    frequency: "25000 Hz"
+    inverted: true
   - platform: ledc
     pin: GPIO06
+    id: pwm_fan2
+    frequency: "25000 Hz"
+    inverted: true
+  - platform: ledc
+    pin: GPIO14
+    id: pwm_fan3
+    frequency: "25000 Hz"
+    inverted: true
+  - platform: ledc
+    pin: GPIO19
     id: pwm_fan4
     frequency: "25000 Hz"
+    inverted: true
 
 # Fan entities
 fan:
@@ -136,7 +150,7 @@ sensor:
   # Fan 1 Speed
   - platform: pulse_counter
     pin:
-      number: GPIO18
+      number: GPIO01
       mode: INPUT_PULLUP
     unit_of_measurement: 'RPM'
     id: fan1_speed
@@ -149,7 +163,7 @@ sensor:
   # Fan 2 Speed
   - platform: pulse_counter
     pin:
-      number: GPIO14
+      number: GPIO07
       mode: INPUT_PULLUP
     unit_of_measurement: 'RPM'
     id: fan2_speed
@@ -162,7 +176,7 @@ sensor:
   # Fan 3 Speed
   - platform: pulse_counter
     pin:
-      number: GPIO20
+      number: GPIO18
       mode: INPUT_PULLUP
     unit_of_measurement: 'RPM'
     id: fan3_speed
@@ -175,7 +189,7 @@ sensor:
   # Fan 4 Speed
   - platform: pulse_counter
     pin:
-      number: GPIO19
+      number: GPIO20
       mode: INPUT_PULLUP
     unit_of_measurement: 'RPM'
     id: fan4_speed
