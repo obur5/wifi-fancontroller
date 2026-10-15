@@ -14,20 +14,14 @@ export default defineConfig({
       },
       routeMiddleware: './src/routeData.ts',
       plugins: [starlightBlog()],
-      title: {
-        en: 'ESP32 WiFi Fan Controller',
-        de: 'ESP32 WiFi Lüftersteuerung',
-      },
-      defaultLocale: 'root',
+      title: 'ESP32 WiFi Fan Controller',
+      // 19.1-01 (D-03): register the `de` Starlight i18n locale so `/de/...`
+      // routes resolve for the curated legal-manual pages populated in plan 02.
+      // Scope is narrow per D-03: only the curated PDF pages get German
+      // content this phase; the rest of the site stays English/EN-fallback.
       locales: {
-        root: {
-          label: 'English',
-          lang: 'en',
-        },
-        de: {
-          label: 'Deutsch',
-          lang: 'de',
-        },
+        root: { label: 'English', lang: 'en' },
+        de: { label: 'Deutsch', lang: 'de' },
       },
       social: [
         {
@@ -41,45 +35,36 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Getting Started',
-          translations: { de: 'Erste Schritte' },
-          items: [
-            { label: 'Overview', translations: { de: 'Übersicht' }, slug: 'getting-started' },
-            { label: 'First Setup', translations: { de: 'Ersteinrichtung' }, slug: 'getting-started/first-setup' },
-            { label: 'Home Assistant', slug: 'getting-started/home-assistant' },
-            { label: 'Firmware Updates', slug: 'getting-started/firmware-updates' },
-            { label: 'Troubleshooting', translations: { de: 'Fehlerbehebung' }, slug: 'getting-started/troubleshooting' },
-          ],
+          autogenerate: { directory: 'getting-started' },
         },
         {
           label: 'Reference',
-          translations: { de: 'Referenz' },
           items: [
-            { label: 'Overview', translations: { de: 'Übersicht' }, slug: 'reference' },
+            { label: 'Overview', slug: 'reference' },
+            { slug: 'reference/datasheet' },
+            { slug: 'reference/compliance' },
+            { slug: 'reference/fan-compatibility' },
             {
               label: 'Hardware',
-              items: [
-                { label: 'Overview', translations: { de: 'Übersicht' }, slug: 'reference/hardware' },
-                { label: 'Rev 3.x (3.1/3.2/3.3)', slug: 'reference/hardware/rev-3-x' },
-                { label: 'Rev 3.0', slug: 'reference/hardware/rev-3-0' },
-                { label: 'Rev 2.0', slug: 'reference/hardware/rev-2-0' },
-                { label: 'Rev 1.0', slug: 'reference/hardware/rev-1-0' },
-              ],
+              autogenerate: { directory: 'reference/hardware' },
             },
             {
               label: 'Modules',
-              translations: { de: 'Module' },
+              autogenerate: { directory: 'reference/modules' },
+            },
+            {
+              label: 'Qwiic / STEMMA QT',
               items: [
-                { label: 'Overview', translations: { de: 'Übersicht' }, slug: 'reference/modules' },
-                { label: 'Temperature PID', translations: { de: 'Temperatur-PID' }, slug: 'reference/modules/temperature-pid' },
-                { label: 'Temperature Linear', translations: { de: 'Temperatur Linear' }, slug: 'reference/modules/temperature-linear' },
-                { label: 'Temperature Curve', translations: { de: 'Temperatur-Kurve' }, slug: 'reference/modules/temperature-curve' },
-                { label: 'RPM PI Control', translations: { de: 'RPM PI-Regelung' }, slug: 'reference/modules/rpm-pi-control' },
-                { label: 'RPM Status LEDs', translations: { de: 'RPM Status-LEDs' }, slug: 'reference/modules/rpm-status-leds' },
-                { label: 'Stall Guard', translations: { de: 'Blockierschutz' }, slug: 'reference/modules/stall-guard' },
-                { label: 'USR Buttons', translations: { de: 'USR-Tasten' }, slug: 'reference/modules/usr-buttons' },
+                { label: 'General', slug: 'reference/qwiic' },
+                { label: 'Combining Modules', slug: 'reference/qwiic/combining' },
+                {
+                  label: 'Expansion Board Examples',
+                  autogenerate: { directory: 'reference/qwiic/examples' },
+                },
               ],
             },
-            { label: 'Fan Compatibility', translations: { de: 'Lüfter-Kompatibilität' }, slug: 'reference/fan-compatibility' },
+            { slug: 'reference/web-server' },
+            { slug: 'reference/standalone' },
           ],
         },
       ],

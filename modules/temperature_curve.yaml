@@ -8,8 +8,8 @@
 #     temperature_curve:
 #       url: https://github.com/zeroflow/wifi-fancontroller
 #       ref: main
-#       files: 
-#         - path: modules/temperature_curve.yaml       
+#       files:
+#         - path: modules/temperature_curve.yaml
 #           vars:
 #             friendly_name: "My Fan Controller"
 #             # Define your curve points (temperature in °C, fan speed in %)
@@ -23,11 +23,14 @@
 #             curve_speed4: "75.0"
 #             curve_temp5: "50.0"    # Point 5: Maximum speed
 #             curve_speed5: "100.0"
+# Local use (no github:// required): see /reference/standalone/
 #
 # Configuration Variables:
 #   - friendly_name: Device name prefix (default: "fancontroller")
 #   - curve_temp[1-5]: Temperature points in °C (auto-sorted, can be in any order)
 #   - curve_speed[1-5]: Fan speed % at each temperature point
+#   - temperature_sensor_id: Id of the sensor supplying the control temperature
+#       (default: fancontroller_temperature, the onboard sensor).
 #
 # Features:
 #   - 5 configurable curve points for precise control
@@ -50,6 +53,8 @@
 #
 substitutions:
   friendly_name: "Fancontroller" # default
+  # Sensor supplying the control temperature. Defaults to the onboard sensor
+  temperature_sensor_id: fancontroller_temperature
   # Default: Balanced curve
   curve_temp1: "20.0"
   curve_speed1: "0.0"
@@ -67,37 +72,39 @@ globals:
   - id: curve_config_warning
     type: bool
     restore_value: no
-    initial_value: 'false'
+    initial_value: "false"
 
 # Validate configuration at boot
 esphome:
   on_boot:
-    priority: -100  # Run late, after numbers are initialized
-    then:
-      - lambda: |-
-          // Check if temperature points are monotonically increasing
-          float temps[5] = {
-            ${curve_temp1}, ${curve_temp2}, ${curve_temp3},
-            ${curve_temp4}, ${curve_temp5}
-          };
+    - priority: -100 # Run late, after numbers are initialized
+      then:
+        - lambda: |-
+            ESP_LOGI("temperature_curve", "Control sensor: ${temperature_sensor_id}");
 
-          bool is_monotonic = true;
-          for (int i = 0; i < 4; i++) {
-            if (temps[i] >= temps[i+1]) {
-              ESP_LOGW("temperature_curve",
-                "WARNING: Temperature point %d (%.1f°C) >= point %d (%.1f°C)! "
-                "Curve will be auto-sorted at runtime, but consider fixing your configuration.",
-                i+1, temps[i], i+2, temps[i+1]);
-              is_monotonic = false;
-              id(curve_config_warning) = true;
+            // Check if temperature points are monotonically increasing
+            float temps[5] = {
+              ${curve_temp1}, ${curve_temp2}, ${curve_temp3},
+              ${curve_temp4}, ${curve_temp5}
+            };
+
+            bool is_monotonic = true;
+            for (int i = 0; i < 4; i++) {
+              if (temps[i] >= temps[i+1]) {
+                ESP_LOGW("temperature_curve",
+                  "WARNING: Temperature point %d (%.1f°C) >= point %d (%.1f°C)! "
+                  "Curve will be auto-sorted at runtime, but consider fixing your configuration.",
+                  i+1, temps[i], i+2, temps[i+1]);
+                is_monotonic = false;
+                id(curve_config_warning) = true;
+              }
             }
-          }
 
-          if (is_monotonic) {
-            ESP_LOGI("temperature_curve",
-              "Temperature curve validated: %.1f°C → %.1f°C → %.1f°C → %.1f°C → %.1f°C",
-              temps[0], temps[1], temps[2], temps[3], temps[4]);
-          }
+            if (is_monotonic) {
+              ESP_LOGI("temperature_curve",
+                "Temperature curve validated: %.1f°C → %.1f°C → %.1f°C → %.1f°C → %.1f°C",
+                temps[0], temps[1], temps[2], temps[3], temps[4]);
+            }
 
 number:
   # Temperature Point 1
@@ -243,7 +250,7 @@ sensor:
     accuracy_decimals: 1
     update_interval: 10s
     lambda: |-
-      float temp = id(fancontroller_temperature).state;
+      float temp = id(${temperature_sensor_id}).state;
 
       // Get all curve points
       struct Point {
@@ -300,7 +307,7 @@ sensor:
       then:
         - output.set_level:
             id: curve_proxy_output
-            level: !lambda 'return x / 100.0;'
+            level: !lambda "return x / 100.0;"
 
 output:
   - platform: template
@@ -402,4 +409,4 @@ binary_sensor:
     id: curve_config_warning_sensor
     entity_category: diagnostic
     icon: mdi:alert-circle
-    lambda: 'return id(curve_config_warning);'
+    lambda: "return id(curve_config_warning);"

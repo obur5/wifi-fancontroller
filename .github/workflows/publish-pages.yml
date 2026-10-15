@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Create firmware directory
         run: mkdir -p site/public/firmware
@@ -38,6 +38,19 @@ jobs:
           latest: true
           fileName: '*'
           out-file-path: site/public/firmware
+
+      # The datasheet PDFs (publish-datasheet.yml) ship as release assets, so
+      # they arrive in the same release-downloader sweep as the firmware
+      # binaries. Move them into their own public path so they are served from
+      # /datasheet/ rather than /firmware/. nullglob keeps this a no-op for
+      # releases predating the datasheet workflow.
+      - name: Relocate datasheet PDFs to /datasheet/
+        run: |
+          mkdir -p site/public/datasheet
+          shopt -s nullglob
+          for f in site/public/firmware/*datasheet*.pdf; do
+            mv "$f" site/public/datasheet/
+          done
 
       - name: Build Astro site
         uses: withastro/action@v6

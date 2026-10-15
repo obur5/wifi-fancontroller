@@ -66,7 +66,7 @@ captive_portal:
 #   friendly_name: "Server Rack"
 #   kp: "50"              # Proportional gain scaled by 100000 (increase for faster response)
 #   ki: "10"              # Integral gain scaled by 100000 (increase to eliminate steady-state error)
-#   update_interval: "1"  # Control loop update interval in seconds (matches sensor update)
+#   update_interval: "1s" # Control loop update interval in seconds (matches sensor update)
 #
 # How to use:
 # 1. Enable "PI Control Fan X" switch in Home Assistant

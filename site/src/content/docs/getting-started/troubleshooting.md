@@ -1,6 +1,8 @@
 ---
 title: Troubleshooting
 description: Solutions to common issues with the WiFi Fan Controller
+sidebar:
+  order: 4
 ---
 
 Find solutions to common issues below. Each section is organized by symptom so you can jump directly to your problem.
@@ -21,12 +23,26 @@ Find solutions to common issues below. Each section is organized by symptom so y
 - **Minimum startup speed** -- some fans require a higher PWM percentage to start spinning (typically 20-30%). Try setting the fan to 100% first, then lower gradually to find the minimum speed your fans support.
 - **Check wiring** -- make sure the fan connector is fully seated and oriented correctly. See your [hardware revision page](/reference/hardware/) for pin diagrams.
 
+## Fans keep spinning when set to off
+
+- **This is usually the fan, not the board** - the Intel 4-wire PWM specification leaves behavior at very low duty cycles to the fan manufacturer. Many fans hold a minimum speed instead of stopping when the controller output reaches 0%.
+- **Read the RPM sensor** - if a fan reports a steady non-zero RPM while its fan entity is switched off, that value is the fan's own minimum speed. [Fan Compatibility](/reference/fan-compatibility/) lists the fans that have been tested and explains how to check a fan that is not listed.
+- **The board cannot switch 12V** - the fan headers are always powered while the barrel jack is connected. A fan that does not stop on its own cannot be stopped by the controller. Setting a fan to 0%, or switching its fan entity off in Home Assistant, does not de-energize the header, there is no software way to do it. To swap or rewire a fan, unplug the barrel jack first. If a hard stop is a firm requirement, pick a fan confirmed to spin down to 0 RPM.
+- **3-pin fans always run at full speed** - a 3-pin DC fan has no PWM input and ignores the speed setting entirely. Check that your fan is a true 4-pin PWM model.
+
 ## Not showing in Home Assistant
 
 - **ESPHome integration required** -- the fan controller uses the ESPHome native API. Make sure the [ESPHome integration](https://www.home-assistant.io/integrations/esphome/) is installed.
 - **Same network/VLAN** -- the device must be on the same network as Home Assistant for mDNS discovery to work. If you use VLANs, ensure mDNS traffic can cross between them.
 - **Manual add** -- go to **Settings > Devices & Services > Add Integration > ESPHome** and enter the device's IP address manually.
 - **Check HA logs** -- look in **Settings > System > Logs** for API connection errors related to the fan controller.
+
+## Web interface not reachable (port 80 refused)
+
+- **The web server is off by default** -- the firmware ships without the built-in web interface for security and memory reasons, so `http://<board-ip>` returns `ERR_CONNECTION_REFUSED`. This is expected, not a fault.
+- **Home Assistant does not need it** -- the board is controlled over the encrypted ESPHome API. Fan control, sensors, and automations all work without the web interface.
+- **Enable it yourself** -- add the `web_server` component (with authentication) to your own ESPHome config and re-flash. See [Web Interface](/reference/web-server/) for the exact configuration, or [Standalone Usage](/reference/standalone/) if you're running without Home Assistant entirely.
+- **`dashboard_import` won't do it** -- importing the package does not start a web server. You have to add the `web_server` block yourself.
 
 ## Temperature or humidity reads wrong
 

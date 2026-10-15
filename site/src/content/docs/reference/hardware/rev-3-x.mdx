@@ -1,6 +1,9 @@
 ---
 title: "Rev 3.x (3.1 / 3.2 / 3.3)"
 description: Latest generation ESP32-S2 with RGB status LEDs, QWIIC expansion, and NeoPixel output
+sidebar:
+  label: Rev 3.x (3.1/3.2/3.3)
+  order: 1
 ---
 
 import FlashButton from '../../../../components/FlashButton.astro';
@@ -70,7 +73,8 @@ Add this to your ESPHome config to import the hardware package for your board re
 
 - **MCU:** ESP32S2-Mini-2
 - **Board platform:** esp32-s2-saola-1
-- **Power:** DC Input (12V, 5.5x2.1mm)
+- **Power:** external 12V DC SELV supply, not included (5.5x2.1mm barrel jack, centre positive, 12V DC ±5%)
+- **Max total input current:** 2.5A (set by the DC barrel jack -- applies to the sum of all fans plus board electronics, not per fan header; size your supply to the combined draw of the fans you connect). See [Safety and Compliance](/reference/compliance/).
 - **Flashing:** USB-C port
 - **Fan outputs:** 4x PWM headers with signal buffering
 - **Status LEDs:** SK6805 RGB LEDs for board status and each fan connector
@@ -112,6 +116,28 @@ Download prebuilt binaries: [Rev 3.1](/firmware/fancontroller-r3-1-esp32s2.facto
 The USB-C port provides power to the ESP32-S2 microcontroller only. It cannot power the fans. Fans require an external 12V DC power supply connected to the DC input jack (5.5x2.1mm).
 </Aside>
 
+## Hardware Self-Test Firmware
+
+Every board is tested with a QC firmware before it ships, and that same image is available here. It is a diagnostic build, not a usable controller firmware: it takes no WiFi credentials, joins no network and exposes nothing to Home Assistant. It exercises the hardware and reports the result through the onboard LEDs, so you can tell a genuine hardware fault from a configuration problem without attaching a serial console. Flash it if a fan channel, the sensor or a button seems dead and you want a second opinion before opening an issue.
+
+<Aside type="caution" title="Run the test on USB power only">
+Unplug the 12V supply and power the board from the USB-C port alone for the whole self test. The fan check asks you to bridge two pins on a fan header, and the pin right next to them carries the full 12V rail whenever the barrel jack is connected. USB power is all any of these checks need.
+</Aside>
+
+What it checks, and how to read it:
+
+- **Fan channels.** Each PWM output runs at 1000 Hz and the tach input beside it reads that signal back. To test a channel, bridge pins 3 and 4 of its fan header, counting from the left, which shorts TACH to PWM. The LED for that header turns green while the bridge is in place and returns to red once you remove it. Repeat for each of the four headers.
+- **Temperature and humidity sensor.** The board status LED shows dim purple on every valid HDC1080 reading, refreshed every 5 seconds. A status LED that stays dark means the sensor is not answering on the I2C bus.
+- **User buttons.** Hold USR1 for a red status LED, USR2 for green, USR3 for blue. The LED goes dark on release and returns to the purple heartbeat.
+
+<FlashButton manifest="/firmware/fancontroller-qc-r3-3.manifest.json" label="Flash QC Test Firmware (Rev 3.1 / 3.2 / 3.3)" />
+
+The [config is in the repository](https://github.com/zeroflow/wifi-fancontroller/blob/main/fancontroller-rev3.3-esp32s2.qc.yaml) if you would rather read what it does before flashing it.
+
+<Aside type="caution" title="This replaces the firmware on the board">
+Flashing the QC image overwrites whatever is currently on the board, including your ESPHome config and its stored WiFi credentials. When you are done testing, flash the factory firmware above or your own ESPHome build to get back.
+</Aside>
+
 ## ESP32-S2 Pin Assignment
 
 This pin table applies to all Rev 3.1, 3.2, and 3.3 boards.
@@ -146,8 +172,27 @@ This pin table applies to all Rev 3.1, 3.2, and 3.3 boards.
 | GPIO37 | USR2 |
 | GPIO38 | USR1 |
 | GPIO42 | Neopixel Expansion Port |
+| GPIO43 | UART0 TX (U0TXD), Serial Flashing Header |
+| GPIO44 | UART0 RX (U0RXD), Serial Flashing Header |
 | GPIO45 | unused (strapping) |
 | GPIO46 | unused (strapping) |
+
+## Serial Flashing Header (TX/RX)
+
+In addition to the USB-C port, the board exposes the ESP32-S2 UART0 on a serial header for flashing and serial logs. This is the fallback path when USB-C is not detected (see the USB troubleshooting note above) and the channel ESPHome's `logger` uses by default.
+
+| Signal | Pin | Description |
+|--------|-----|-------------|
+| 3.3V | 3.3V |              |
+| TX | GPIO43 | UART0 transmit (U0TXD), board to host |
+| RX | GPIO44 | UART0 receive (U0RXD), host to board |
+| GND | GND | Common ground (required for serial) |
+
+Connect a 3.3V USB-to-serial adapter (TX to RX, RX to TX, GND to GND). To enter the bootloader for flashing, hold BOOT (GPIO0) while resetting the board.
+
+<Aside type="caution" title="3.3V logic only">
+The ESP32-S2 UART pins are 3.3V. Do not connect a 5V serial adapter directly to TX/RX.
+</Aside>
 
 ## I2C Extension Port
 
@@ -160,6 +205,21 @@ The board offers an I2C extension port above Fan 4.
 | 3 | SCL | GPIO 34, 4.7k Pull-Up |
 | 4 | SDA | GPIO 33, 4.7k Pull-Up |
 | 5 | +3V3 | |
+
+## Qwiic Connector
+
+The board offers a Qwiic connector (standard JST-SH 4-pin, 1mm pitch) for solderless I2C expansion. It shares the **same I2C bus** as the 100mil I2C extension port and the onboard HDC1080 sensor, so addresses must not conflict across both ports.
+
+| Nr. | Pin | Description |
+|-----|-----|-------------|
+| 1 | GND | Black wire |
+| 2 | +3V3 | Red wire |
+| 3 | SDA | GPIO 33, blue wire, 4.7k Pull-Up |
+| 4 | SCL | GPIO 34, yellow wire, 4.7k Pull-Up |
+
+<Aside type="note" title="Shared I2C bus">
+The Qwiic port, the 100mil I2C extension port, and the onboard HDC1080 temperature/humidity sensor are all on the same I2C bus (GPIO33 SDA / GPIO34 SCL). Devices on any of these connectors share that bus.
+</Aside>
 
 ## SMD Expansion Port
 

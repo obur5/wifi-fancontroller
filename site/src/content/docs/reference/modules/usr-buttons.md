@@ -1,6 +1,8 @@
 ---
 title: USR Buttons
-description: Physical button control for fan speed with per-fan RGB LED feedback
+description: Assign the three USR buttons to fan selection and speed stepping, with per-fan RGB LED feedback
+sidebar:
+  order: 10
 ---
 
 :::caution[Rev 3.1+ Only]
@@ -9,13 +11,20 @@ This module requires **Rev 3.1 or later** hardware (3.1, 3.2, or 3.3). Earlier r
 
 ## Purpose
 
-The USR Buttons module gives you direct physical control over fan speeds using the three USR buttons on the board. Press a button to select a fan, then step its speed up or down without touching Home Assistant. The selected fan's LED lights up in a configurable color so you always know which fan you're adjusting.
+The board's three USR buttons are user-assignable GPIO inputs with no behaviour of their own. This module is one ready-made way to assign them: it maps them to fan selection and speed stepping, so a button press selects a fan and steps its speed up or down. The selected fan's LED lights up in a configurable color to show which fan the buttons are acting on.
 
 ## When to Use
 
-Use this module when you want hands-on control of individual fan speeds - useful during initial setup, when tuning noise levels by ear, or in any situation where reaching for a phone or computer is inconvenient. Manual overrides take priority over all temperature modules, so you can temporarily lock a fan at a specific speed while leaving the others under automatic control.
+Assign the buttons this way when you want a local override available at the board, typically during setup and commissioning, when tuning noise levels by ear, or for the occasional manual adjustment. Manual overrides take priority over all temperature modules, so you can pin a fan at a specific speed while leaving the others under automatic control.
+
+Regular operation of the controller runs over the network interface through Home Assistant. The buttons complement that; they are not meant to replace it as the day-to-day control surface.
+
+:::caution[Keep 20 cm separation]
+This product contains a radio transmitter and must be installed so that at least 20 cm separation is maintained between the antenna and any person during normal operation. Assigning the buttons does not change that. Reach the board for setup or an occasional override, then step away; do not plan an installation around standing at the board. See [Safety and Compliance](/reference/compliance/).
+:::
 
 If you also use RPM Status LEDs, the two modules coordinate automatically: entering button selection mode temporarily takes over the LEDs, then returns control to RPM Status LEDs when the timeout expires.
+If you want an explicit auto/manual mode toggle from the board as well, see [USR Buttons with Auto/Manual Mode](/reference/modules/usr-buttons-mode/), a superset of this module.
 
 See the [modules overview](/reference/modules/) for a comparison of all available modules.
 
@@ -24,7 +33,7 @@ See the [modules overview](/reference/modules/) for a comparison of all availabl
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `friendly_name` | `"Fan Controller"` | Device name prefix for HA entities |
-| `speed_step` | `"10"` | Percentage to increase or decrease fan speed per button press |
+| `speed_step` | `"10"` | Speed change per button press, in percent at the hardware default of 100 speed levels |
 | `override_timeout` | `"30s"` | Time after the last button press before selection mode auto-deactivates |
 | `selection_color_r` | `"0"` | Red component (0–255) of the selection indicator LED color |
 | `selection_color_g` | `"0"` | Green component (0–255) of the selection indicator LED color |
@@ -64,6 +73,45 @@ The three USR buttons (labeled top to bottom on the board) each have a fixed fun
 | Fan 4 Manual Override | Same as above for fan 4. |
 
 The override switches let you release individual fans from manual control without affecting the others. You can also turn them on from Home Assistant to lock a fan at its current speed without pressing any physical buttons.
+
+## Web UI grouping
+
+This block goes in **your own configuration**, not in the module. See [why the assignment lives in the consuming config](/reference/standalone/#grouping-module-entities-in-the-web-ui) for the reason. `version: 3` is what makes entity grouping work at all; without it, entity grouping has no effect.
+
+```yaml
+web_server:
+  version: 3
+  sorting_groups:
+    - id: grp_usr_buttons
+      name: "USR Buttons"
+      sorting_weight: 400
+
+button:
+  - id: !extend usr_clear_overrides
+    web_server:
+      sorting_group_id: grp_usr_buttons
+      sorting_weight: 10
+
+switch:
+  - id: !extend usr_override_sw_fan1
+    web_server:
+      sorting_group_id: grp_usr_buttons
+      sorting_weight: 20
+  - id: !extend usr_override_sw_fan2
+    web_server:
+      sorting_group_id: grp_usr_buttons
+      sorting_weight: 30
+  - id: !extend usr_override_sw_fan3
+    web_server:
+      sorting_group_id: grp_usr_buttons
+      sorting_weight: 40
+  - id: !extend usr_override_sw_fan4
+    web_server:
+      sorting_group_id: grp_usr_buttons
+      sorting_weight: 50
+```
+
+None of this module's 5 entities are diagnostic, so all of them fall in the 10-50 range.
 
 ## YAML Examples
 

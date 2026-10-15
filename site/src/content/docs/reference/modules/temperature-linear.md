@@ -1,6 +1,8 @@
 ---
 title: Temperature Linear
 description: Simple linear temperature-to-fan-speed mapping module
+sidebar:
+  order: 2
 ---
 
 :::note[All Revisions]
@@ -23,58 +25,123 @@ This module cooperates with [Stall Guard](/reference/modules/stall-guard/) via a
 
 ## Configuration
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `friendly_name` | `"Fancontroller"` | Device name prefix for all entities |
-| `t_off` | `"25.0"` | Temperature below which fans turn off (C) |
-| `t1` | `"30.0"` | Lower temperature setpoint (C) |
-| `t2` | `"50.0"` | Upper temperature setpoint (C) |
-| `fanpercent1` | `"30.0"` | Fan speed at t1 (%) |
-| `fanpercent2` | `"100.0"` | Fan speed at t2 and above (%) |
+| Variable                | Default                       | Description                                        |
+| ----------------------- | ----------------------------- | -------------------------------------------------- |
+| `friendly_name`         | `"Fancontroller"`             | Device name prefix for all entities                |
+| `t_off`                 | `"25.0"`                      | Temperature below which fans turn off (C)          |
+| `t1`                    | `"30.0"`                      | Lower temperature setpoint (C)                     |
+| `t2`                    | `"50.0"`                      | Upper temperature setpoint (C)                     |
+| `fanpercent1`           | `"30.0"`                      | Fan speed at t1 (%)                                |
+| `fanpercent2`           | `"100.0"`                     | Fan speed at t2 and above (%)                      |
+| `temperature_sensor_id` | `"fancontroller_temperature"` | Id of the sensor supplying the control temperature |
 
 ## Zone Behavior
 
 The module divides temperature into four zones:
 
-| Zone | Temperature Range | Fan Speed | Behavior |
-|------|-------------------|-----------|----------|
-| Off | Below `t_off` | 0% | Fans completely off |
-| Constant low | `t_off` to `t1` | `fanpercent1` | Fans run at a fixed low speed |
-| Ramp | `t1` to `t2` | `fanpercent1` to `fanpercent2` | Linear ramp between the two speeds |
-| Constant high | Above `t2` | `fanpercent2` | Fans run at maximum configured speed |
+| Zone          | Temperature Range | Fan Speed                      | Behavior                             |
+| ------------- | ----------------- | ------------------------------ | ------------------------------------ |
+| Off           | Below `t_off`     | 0%                             | Fans completely off                  |
+| Constant low  | `t_off` to `t1`   | `fanpercent1`                  | Fans run at a fixed low speed        |
+| Ramp          | `t1` to `t2`      | `fanpercent1` to `fanpercent2` | Linear ramp between the two speeds   |
+| Constant high | Above `t2`        | `fanpercent2`                  | Fans run at maximum configured speed |
 
 With the defaults (t_off=25, t1=30, t2=50, fanpercent1=30%, fanpercent2=100%):
+
 - Below 25 C: fans off
 - 25-30 C: fans at 30%
 - 30-50 C: fans ramp linearly from 30% to 100%
 - Above 50 C: fans at 100%
 
+"Fans off" here means the module drives the PWM output to 0%. Whether the fan actually stops at 0% is a property of the fan, not of the module. Many PWM fans hold a minimum speed instead, see [Fan Compatibility](/reference/fan-compatibility/).
+
 ## Home Assistant Entities
 
 ### Number Entities
 
-| Entity | Range | Step | Unit | Default | Description |
-|--------|-------|------|------|---------|-------------|
-| Linear Off Temperature | 20 -- 50 | 0.5 | C | 25.0 | Temperature below which fans stop |
-| Linear T1 | 20 -- 50 | 0.5 | C | 30.0 | Lower temperature setpoint |
-| Linear T2 | 20 -- 50 | 0.5 | C | 50.0 | Upper temperature setpoint |
-| Linear Fan Percent 1 | 0 -- 100 | 1 | % | 30 | Fan speed at T1 |
-| Linear Fan Percent 2 | 0 -- 100 | 1 | % | 100 | Fan speed at T2 and above |
+| Entity                 | Range    | Step | Unit | Default | Description                       |
+| ---------------------- | -------- | ---- | ---- | ------- | --------------------------------- |
+| Linear Off Temperature | 20 -- 50 | 0.5  | C    | 25.0    | Temperature below which fans stop |
+| Linear T1              | 20 -- 50 | 0.5  | C    | 30.0    | Lower temperature setpoint        |
+| Linear T2              | 20 -- 50 | 0.5  | C    | 50.0    | Upper temperature setpoint        |
+| Linear Fan Percent 1   | 0 -- 100 | 1    | %    | 30      | Fan speed at T1                   |
+| Linear Fan Percent 2   | 0 -- 100 | 1    | %    | 100     | Fan speed at T2 and above         |
 
 ### Sensor Entities
 
-| Entity | Unit | Description |
-|--------|------|-------------|
-| Linear Output | % | Current calculated fan speed (updated every 10s) |
+| Entity        | Unit | Description                                      |
+| ------------- | ---- | ------------------------------------------------ |
+| Linear Output | %    | Current calculated fan speed (updated every 10s) |
 
 ### Switch Entities
 
-| Entity | Default | Description |
-|--------|---------|-------------|
-| Auto Control Fan 1 | ON | Enable linear control for fan 1 |
-| Auto Control Fan 2 | ON | Enable linear control for fan 2 |
-| Auto Control Fan 3 | ON | Enable linear control for fan 3 |
-| Auto Control Fan 4 | ON | Enable linear control for fan 4 |
+| Entity             | Default | Description                     |
+| ------------------ | ------- | ------------------------------- |
+| Auto Control Fan 1 | ON      | Enable linear control for fan 1 |
+| Auto Control Fan 2 | ON      | Enable linear control for fan 2 |
+| Auto Control Fan 3 | ON      | Enable linear control for fan 3 |
+| Auto Control Fan 4 | ON      | Enable linear control for fan 4 |
+
+## Web UI grouping
+
+This block goes in **your own configuration**, not in the module. See [why the assignment lives in the consuming config](/reference/standalone/#grouping-module-entities-in-the-web-ui) for the reason. `version: 3` is what makes entity grouping work at all; without it, entity grouping has no effect.
+
+```yaml
+web_server:
+  version: 3
+  sorting_groups:
+    - id: grp_temp_linear
+      name: "Linear Temperature Control"
+      sorting_weight: 100
+
+number:
+  - id: !extend linear_t_off
+    web_server:
+      sorting_group_id: grp_temp_linear
+      sorting_weight: 10
+  - id: !extend linear_t1
+    web_server:
+      sorting_group_id: grp_temp_linear
+      sorting_weight: 20
+  - id: !extend linear_t2
+    web_server:
+      sorting_group_id: grp_temp_linear
+      sorting_weight: 30
+  - id: !extend linear_fanpercent1
+    web_server:
+      sorting_group_id: grp_temp_linear
+      sorting_weight: 40
+  - id: !extend linear_fanpercent2
+    web_server:
+      sorting_group_id: grp_temp_linear
+      sorting_weight: 50
+
+sensor:
+  - id: !extend linear_output_value
+    web_server:
+      sorting_group_id: grp_temp_linear
+      sorting_weight: 60
+
+switch:
+  - id: !extend auto_control_fan1
+    web_server:
+      sorting_group_id: grp_temp_linear
+      sorting_weight: 70
+  - id: !extend auto_control_fan2
+    web_server:
+      sorting_group_id: grp_temp_linear
+      sorting_weight: 80
+  - id: !extend auto_control_fan3
+    web_server:
+      sorting_group_id: grp_temp_linear
+      sorting_weight: 90
+  - id: !extend auto_control_fan4
+    web_server:
+      sorting_group_id: grp_temp_linear
+      sorting_weight: 100
+```
+
+This is the same block `examples/standalone.yaml` ships, entity for entity and weight for weight. Copy it verbatim into a config that already declares `web_server:` with `version: 3`.
 
 ## YAML Examples
 
@@ -121,3 +188,42 @@ The defaults work for a wide range of setups. Adjust only after observing behavi
 - **Set `fanpercent1` to your fans' minimum reliable speed** -- most fans need at least 20-30% PWM to start spinning consistently. Check the [troubleshooting guide](/getting-started/troubleshooting/) if fans stutter at low speeds.
 - **Use the HA number entities to fine-tune** -- all five parameters can be adjusted live from Home Assistant without reflashing
 - **Watch the Linear Output sensor** -- it shows the current calculated fan speed percentage, helpful for verifying your thresholds behave as expected
+
+## Controlling From a Different Sensor
+
+By default the module reads `fancontroller_temperature`, the onboard HDC1080 that every hardware package declares. Set `temperature_sensor_id` to the id of any other temperature sensor in your configuration to control from that instead:
+
+```yaml
+packages:
+  # modules/bme680.yaml is not standalone - it needs the shared I2C bus (bus_a)
+  # that your hardware package declares. Use your own board revision here.
+  hardware:
+    url: https://github.com/zeroflow/wifi-fancontroller
+    ref: main
+    files: [hardware-rev-3.1.yaml]
+  bme680:
+    url: https://github.com/zeroflow/wifi-fancontroller
+    ref: main
+    files: [modules/bme680.yaml]
+  temperature_linear:
+    url: https://github.com/zeroflow/wifi-fancontroller
+    ref: main
+    files:
+      - path: modules/temperature_linear.yaml
+        vars:
+          temperature_sensor_id: "bme680_temperature"
+```
+
+Remember that `t_off`, `t1`, and `t2` are absolute temperatures. An external sensor measuring room or intake air reads lower than the board does, so thresholds tuned for the onboard sensor will usually need lowering.
+
+Omit the variable and it falls back to `fancontroller_temperature`, so existing configurations keep working unchanged. A misspelled id fails the build rather than quietly falling back to the onboard sensor.
+
+The Qwiic modules build their sensor ids from an id-prefix substitution, so [BME680](/reference/qwiic/examples/bme680/) gives you `bme680_temperature`, [SCD41](/reference/qwiic/examples/scd41/) gives `scd41_temperature`, and [DS2484](/reference/qwiic/examples/ds2484/) gives whatever ids you assign your own `dallas_temp` sensors.
+
+If you also run the [SSD1306 OLED](/reference/qwiic/examples/ssd1306/) module, note that it displays the onboard sensor regardless of this setting, so the screen and the fan control can show different temperatures.
+
+The module names the sensor it is reading in its boot log, so you can confirm from a log dump that the override took effect.
+
+:::caution[External sensors and startup]
+A sensor that needs time before its first reading, an SCD41 warming up, a BME680 on a long update interval, a Dallas probe, reports no value for a while after boot. This module behaves differently from the curve modules in that window: with no reading, every zone comparison in the lambda is false and the final `else` branch applies `fanpercent2`, which defaults to **100%**. The fans run flat out until the first reading lands, they do not stay off. Keep the sensor's `update_interval` short. The onboard HDC1080 polls every 10 seconds and needs no warm-up, so the window is normally too short to notice; `modules/bme680.yaml` defaults to a 60 second interval, which stretches it considerably.
+:::

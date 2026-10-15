@@ -1,0 +1,168 @@
+# Example: Hardware Rev 3.3 with Auto/Manual Mode
+#
+# A temperature curve drives all four fans automatically. Holding USR2 for a
+# second on a selected fan -- or flipping its Manual Override switch in Home
+# Assistant -- takes that one fan out of the curve's hands and leaves its
+# speed exactly where it was. The other fans keep following the curve. The
+# RGB LEDs show live RPM the rest of the time, with a mode-colored indicator
+# while you are choosing a fan on the board.
+#
+# usr_buttons_mode REPLACES usr_buttons. It is a superset that adds the
+# long-press mode toggle and defines the same component ids -- loading both
+# in the same config breaks it. Use one or the other, never both.
+
+packages:
+  # Rev 3.3 hardware: pins, fan outputs, RPM sensors, the onboard temp/humidity sensor
+  hardware:
+    url: https://github.com/zeroflow/wifi-fancontroller
+    ref: main
+    files: [hardware-rev-3.3.yaml]
+
+  # Drives all four fans from a 5-point temperature curve
+  temperature_curve:
+    url: https://github.com/zeroflow/wifi-fancontroller
+    ref: main
+    files:
+      - path: modules/temperature_curve.yaml
+        vars:
+          friendly_name: "My Fan Controller"
+          # Balanced curve (the module's own default, written out here so
+          # this file is self-describing rather than relying on a default
+          # the reader cannot see)
+          curve_temp1: "20.0"
+          curve_speed1: "0.0"
+          curve_temp2: "25.0"
+          curve_speed2: "25.0"
+          curve_temp3: "30.0"
+          curve_speed3: "50.0"
+          curve_temp4: "40.0"
+          curve_speed4: "75.0"
+          curve_temp5: "50.0"
+          curve_speed5: "100.0"
+
+  # USR1/USR2/USR3 button control, per-fan Manual Override switches, and the
+  # USR2 long-press auto/manual mode toggle. Superset of and mutually
+  # exclusive with usr_buttons -- see the header note above.
+  usr_buttons_mode:
+    url: https://github.com/zeroflow/wifi-fancontroller
+    ref: main
+    files:
+      - path: modules/usr_buttons_mode.yaml
+        vars:
+          friendly_name: "My Fan Controller"
+          # Five percent per press. The fans keep the hardware package's
+          # default of 100 discrete speed levels, so one level is one
+          # percent, and a press moves exactly five percent. Home Assistant
+          # keeps full one percent resolution on its slider at the same
+          # time: the level count is how many values the fan accepts, while
+          # this step is how far one press moves within them.
+          speed_step: "5"
+          override_timeout: "30s"
+
+  # RGB LED shows fan speed via RPM, red (stopped) to green (full speed)
+  rpm_status_leds:
+    url: https://github.com/zeroflow/wifi-fancontroller
+    ref: main
+    files:
+      - path: modules/rpm_status_leds.yaml
+        vars:
+          full_rpm: "2500"
+
+esphome:
+  name: my-fancontroller
+  friendly_name: My Fan Controller
+
+esp32:
+  board: esp32-s2-saola-1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+# Enable OTA updates
+ota:
+  - platform: esphome
+
+# WiFi configuration
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot in case wifi connection fails
+  ap:
+    ssid: "Fancontroller Fallback"
+
+# Enable captive portal for WiFi setup
+captive_portal:
+
+# Correct the onboard HDC1080 sensor for self-heating from the board itself.
+# The values below are placeholders, not a calibration to copy: the amount of
+# self-heating depends on the board's own enclosure and load, typically 1 to
+# 3 kelvin, and you should measure your own board against a reference
+# instrument rather than reusing these two numbers. temperature_sensor is the
+# HDC1080 platform's own top-level id in the hardware package; !extend only
+# resolves top-level ids, so the target here is temperature_sensor, never the
+# nested fancontroller_temperature or fancontroller_humidity ids two levels
+# further down.
+sensor:
+  - id: !extend temperature_sensor
+    temperature:
+      filters:
+        - offset: -2.0
+    humidity:
+      filters:
+        - offset: 3.0
+
+# temperature_curve ships an "Auto Control Fan N" switch per fan, and
+# usr_buttons_mode ships a "Fan N Manual Override" switch per fan. Both land
+# in Home Assistant, so without this block a customer sees two switches per
+# fan for what is really one decision, and a fan can end up off the curve
+# for a reason the dashboard does not make obvious.
+#
+# internal: true hides the entity from Home Assistant and from the API. It
+# does not remove the object: the switch keeps its restore_mode:
+# RESTORE_DEFAULT_ON, stays on, and temperature_curve's own write_action
+# lambda keeps reading id(auto_control_fanN).state, so automatic control
+# keeps running and the Manual Override switch becomes the single per-fan
+# gate.
+#
+# This lives here, in the example, and not in usr_buttons_mode.yaml, because
+# that module deliberately does not know which temperature module is
+# loaded. temperature_pid names its equivalent switches pid_control_fanN
+# rather than auto_control_fanN, so usr_override_fanN stays the
+# module-neutral interface every temperature module in this project checks.
+# A module that hid another module's entity would have to hard-code that
+# other module's ids.
+#
+# auto_control_fan1 through auto_control_fan4 are top-level ids in
+# temperature_curve's switch: list, the same reason !extend reaches
+# temperature_sensor above.
+switch:
+  - id: !extend auto_control_fan1
+    internal: true
+  - id: !extend auto_control_fan2
+    internal: true
+  - id: !extend auto_control_fan3
+    internal: true
+  - id: !extend auto_control_fan4
+    internal: true
+
+# How to use:
+# 1. Flash this config to your fan controller
+# 2. Press USR2 to select a fan -- its LED lights up while selected, magenta
+#    if that fan is in manual and blue if it is under the curve
+# 3. Press USR1 or USR3 to step that fan's speed up or down -- this also
+#    puts the fan in manual, since you just told it what speed to run at
+# 4. Hold USR2 for about a second to toggle the selected fan between
+#    automatic (the curve drives it) and manual (it holds its speed) -- the
+#    fan stays selected afterward, so you can go straight back to step 3 to
+#    set its speed without pressing USR2 again
+# 5. In Home Assistant, use the four "Fan N Manual Override" switches to do
+#    the same thing remotely, and "Clear Fan Overrides" to hand all four
+#    fans back to the curve at once. These are now the only per-fan
+#    switches: the curve's own Auto Control switches are hidden by the
+#    block above
