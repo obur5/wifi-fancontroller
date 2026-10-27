@@ -100,7 +100,13 @@ All boards come pre-flashed with an ESPHome factory image that's ready to use:
 **What you get out of the box:**
 The factory firmware exposes all 4 fan channels as speed controls in Home Assistant, along with temperature and humidity readings from the onboard sensor. Fan speeds can be adjusted manually from 0–100% or automated via Home Assistant. RPM monitoring is available for each fan port.
 
-Standard firmware for every board revision also includes the **Silent**, **Balanced**, **Aggressive**, and **Server** temperature-curve presets, plus all five editable temperature/speed points. No ESPHome YAML changes are needed. Open the device's **Configuration** section in Home Assistant, press a **Curve Preset** button, then enable **Auto Control Fan** for each fan that should follow the curve. Automatic control starts **off**, preserving manual fan settings on first install or upgrade; your subsequent choice is restored after reboot. Existing devices need a firmware update containing this feature.
+Standard firmware for every board revision also includes the **Silent**, **Balanced**, **Aggressive**, and **Server** temperature-curve presets. No ESPHome YAML changes are needed:
+
+1. Open the device in Home Assistant and choose **Fan Profile** under **Controls**.
+2. Set **Fan 1 Mode**, **Fan 2 Mode**, and so on to **Automatic** for the fans you want to follow that profile. Automatic control starts **off**, preserving manual fan settings on first install or upgrade.
+3. For fine-tuning, enter temperatures and speeds under **Configuration**. The profile shows **Custom** when the points differ from a preset. Selecting **Custom** keeps the current points for editing.
+
+Switch states and curve points are restored after reboot; selecting a profile never enables automatic control by itself. Existing devices need a firmware update containing this feature. The original **Curve Preset** buttons remain available for existing dashboards and automations.
 
 For custom YAML that already imports both a full `fancontroller-rev*.yaml` config and `modules/temperature_curve.yaml`, remove the separate curve import when updating to avoid duplicate entities. Keep your local curve substitutions and overrides. Hardware-only builds still add their control module explicitly.
 

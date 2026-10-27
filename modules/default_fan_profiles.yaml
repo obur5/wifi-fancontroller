@@ -13,3 +13,85 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
   - id: !extend auto_control_fan4
     restore_mode: RESTORE_DEFAULT_OFF
+
+# Simple controls beside each fan; existing switches remain for automations.
+select:
+  - platform: template
+    name: "Fan 1 Mode"
+    id: fan1_control_mode
+    icon: mdi:fan-auto
+    options:
+      - Manual
+      - Automatic
+    update_interval: 1s
+    lambda: |-
+      const char *mode = id(auto_control_fan1).state ? "Automatic" : "Manual";
+      if (id(fan1_control_mode).has_state() &&
+          id(fan1_control_mode).current_option() == mode) return {};
+      return std::string(mode);
+    set_action:
+      - lambda: |-
+          if (x == "Automatic") id(auto_control_fan1).turn_on();
+          else id(auto_control_fan1).turn_off();
+          id(curve_output_value).update();
+          id(fan1_control_mode).update();
+
+  - platform: template
+    name: "Fan 2 Mode"
+    id: fan2_control_mode
+    icon: mdi:fan-auto
+    options:
+      - Manual
+      - Automatic
+    update_interval: 1s
+    lambda: |-
+      const char *mode = id(auto_control_fan2).state ? "Automatic" : "Manual";
+      if (id(fan2_control_mode).has_state() &&
+          id(fan2_control_mode).current_option() == mode) return {};
+      return std::string(mode);
+    set_action:
+      - lambda: |-
+          if (x == "Automatic") id(auto_control_fan2).turn_on();
+          else id(auto_control_fan2).turn_off();
+          id(curve_output_value).update();
+          id(fan2_control_mode).update();
+
+  - platform: template
+    name: "Fan 3 Mode"
+    id: fan3_control_mode
+    icon: mdi:fan-auto
+    options:
+      - Manual
+      - Automatic
+    update_interval: 1s
+    lambda: |-
+      const char *mode = id(auto_control_fan3).state ? "Automatic" : "Manual";
+      if (id(fan3_control_mode).has_state() &&
+          id(fan3_control_mode).current_option() == mode) return {};
+      return std::string(mode);
+    set_action:
+      - lambda: |-
+          if (x == "Automatic") id(auto_control_fan3).turn_on();
+          else id(auto_control_fan3).turn_off();
+          id(curve_output_value).update();
+          id(fan3_control_mode).update();
+
+  - platform: template
+    name: "Fan 4 Mode"
+    id: fan4_control_mode
+    icon: mdi:fan-auto
+    options:
+      - Manual
+      - Automatic
+    update_interval: 1s
+    lambda: |-
+      const char *mode = id(auto_control_fan4).state ? "Automatic" : "Manual";
+      if (id(fan4_control_mode).has_state() &&
+          id(fan4_control_mode).current_option() == mode) return {};
+      return std::string(mode);
+    set_action:
+      - lambda: |-
+          if (x == "Automatic") id(auto_control_fan4).turn_on();
+          else id(auto_control_fan4).turn_off();
+          id(curve_output_value).update();
+          id(fan4_control_mode).update();
