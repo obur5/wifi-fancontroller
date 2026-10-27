@@ -1,0 +1,15 @@
+# Profile controls included in the standard firmware for every board revision.
+# Keep first-time installs and upgrades in manual control until the user opts in.
+# RESTORE_DEFAULT_OFF preserves an existing auto-control choice across reboots.
+packages:
+  temperature_curve: !include temperature_curve.yaml
+
+switch:
+  - id: !extend auto_control_fan1
+    restore_mode: RESTORE_DEFAULT_OFF
+  - id: !extend auto_control_fan2
+    restore_mode: RESTORE_DEFAULT_OFF
+  - id: !extend auto_control_fan3
+    restore_mode: RESTORE_DEFAULT_OFF
+  - id: !extend auto_control_fan4
+    restore_mode: RESTORE_DEFAULT_OFF

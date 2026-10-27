@@ -13,6 +13,14 @@ Works with all hardware revisions (Rev 1.0 through Rev 3.3).
 
 The Temperature Curve module lets you define a custom 5-point temperature-to-speed curve for granular control over fan behavior. Values between points are linearly interpolated, giving you a smooth speed transition across the entire temperature range.
 
+:::tip[Included in standard firmware]
+Standard firmware for every board revision includes this module's presets and tuning controls through `modules/default_fan_profiles.yaml`. Automatic control starts **off**: choose a preset under **Configuration** on the Home Assistant device page, then enable **Auto Control Fan** for each fan that should follow the curve. Existing devices need a firmware update containing this feature. Custom builds using only a hardware package still add the curve module explicitly.
+:::
+
+:::note[Updating an existing custom configuration]
+If your YAML imports a full `fancontroller-rev*.yaml` configuration and also imports `modules/temperature_curve.yaml` separately, remove the separate curve import when updating: the full configuration now includes it. Keep your curve substitutions and entity overrides in your local YAML. Configurations that import only `hardware-rev-*.yaml` should keep their explicit curve import.
+:::
+
 ## When to Use
 
 Choose Curve when you need more control points than the linear module's three zones but don't need PID's automatic target-chasing behavior. It's ideal when you know exactly how you want fans to respond at specific temperatures.
@@ -105,6 +113,8 @@ Presets only affect fans whose **Auto Control Fan** switch is on and which are n
 | Auto Control Fan 2 | ON      | Enable curve control for fan 2 |
 | Auto Control Fan 3 | ON      | Enable curve control for fan 3 |
 | Auto Control Fan 4 | ON      | Enable curve control for fan 4 |
+
+These defaults apply when importing `modules/temperature_curve.yaml` directly. Standard firmware overrides all four to **OFF** on first use. Both configurations restore saved switch states on subsequent reboots.
 
 ### Binary Sensor
 

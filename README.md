@@ -100,6 +100,10 @@ All boards come pre-flashed with an ESPHome factory image that's ready to use:
 **What you get out of the box:**
 The factory firmware exposes all 4 fan channels as speed controls in Home Assistant, along with temperature and humidity readings from the onboard sensor. Fan speeds can be adjusted manually from 0–100% or automated via Home Assistant. RPM monitoring is available for each fan port.
 
+Standard firmware for every board revision also includes the **Silent**, **Balanced**, **Aggressive**, and **Server** temperature-curve presets, plus all five editable temperature/speed points. No ESPHome YAML changes are needed. Open the device's **Configuration** section in Home Assistant, press a **Curve Preset** button, then enable **Auto Control Fan** for each fan that should follow the curve. Automatic control starts **off**, preserving manual fan settings on first install or upgrade; your subsequent choice is restored after reboot. Existing devices need a firmware update containing this feature.
+
+For custom YAML that already imports both a full `fancontroller-rev*.yaml` config and `modules/temperature_curve.yaml`, remove the separate curve import when updating to avoid duplicate entities. Keep your local curve substitutions and overrides. Hardware-only builds still add their control module explicitly.
+
 For custom firmware or troubleshooting, see [Installation Methods](#installation-methods) below.
 
 ### Identifying Your Board Revision
@@ -217,7 +221,7 @@ No manual pin configuration needed - just import the package and customize your 
 
 ## Fan Control Modules
 
-Beyond the basic hardware configuration, this project includes optional control modules that implement different fan control strategies. These modules can be imported into your configuration to add temperature-based fan control or status displays.
+The standard firmware includes Temperature Curve controls and presets with automatic control initially off. Hardware-only packages remain a minimal starting point for custom builds. The optional modules below add other fan control strategies or status displays; use one temperature-control strategy per fan.
 
 ### Available Modules
 
