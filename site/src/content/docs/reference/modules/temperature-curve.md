@@ -75,7 +75,7 @@ The dropdown reflects the actual curve points. Editing a temperature or speed au
 
 On reboot, saved curve points are restored and the displayed profile is derived from them. No preset is automatically reapplied over your edits. Standard firmware hides duplicate preset buttons. Direct module imports still expose the buttons for existing dashboards and automations; pressing one also updates the dropdown.
 
-Use **Controls** and **Configuration** on the Home Assistant device page; no dashboard is required. Turn a fan's automatic switch off, then tap that fan to open its manual percentage slider. The standard device page does not conditionally show inline sliders. For clearer labels, rename entities in Home Assistant without changing their entity IDs; for example **Fan 1 automatic**, **Point 1 temperature**, and **Point 1 speed**.
+Use **Controls** and **Configuration** on the Home Assistant device page; no dashboard is required. Turn a fan's automatic switch off, then tap that fan to open its manual percentage slider. The standard device page does not conditionally show inline sliders. For clearer labels, rename entities in Home Assistant without changing their entity IDs; for example **Fan 1 automatic**, **1. At temperature**, and **1. Run fans at**.
 
 ### Number Entities
 
