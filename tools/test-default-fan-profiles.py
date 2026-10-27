@@ -54,23 +54,22 @@ def check_profiles(path, expected_restore_mode):
     assert profile.get("entity_category", "") == ""
     assert "lambda" in profile and "restore_value" not in profile
     assert "set_action" in profile
-    if expected_restore_mode == "RESTORE_DEFAULT_OFF":
-        for index in range(1, 5):
-            mode = profiles[f"fan{index}_control_mode"]
-            assert mode["options"] == ["Manual", "Automatic"]
-            assert mode.get("entity_category", "") == ""
-            assert "lambda" in mode and "restore_value" not in mode
+    assert not any(key.endswith("_control_mode") for key in profiles), (
+        f"{path}: duplicate fan-mode dropdowns are exposed"
+    )
+    for switch_id in AUTO_SWITCHES:
+        if expected_restore_mode == "RESTORE_DEFAULT_OFF":
+            assert switches[switch_id].get("entity_category", "") == ""
+            assert switches[switch_id]["on_turn_on"][0]["then"][0]["component.update"]["id"] == "curve_output_value"
 
     buttons = {item["id"]: item for item in config.get("button", [])}
     for preset in PRESETS:
         button_id = f"curve_preset_{preset}"
         assert button_id in buttons, f"{path}: missing {button_id}"
         button = buttons[button_id]
-        assert (
-            button.get("internal", "false") == "false"
-            and button.get("disabled_by_default", "false") == "false"
-        ), (
-            f"{path}: {button_id} is not enabled in Home Assistant"
+        expected_internal = "true" if expected_restore_mode == "RESTORE_DEFAULT_OFF" else "false"
+        assert button.get("internal", "false") == expected_internal, (
+            f"{path}: duplicate preset-button visibility is incorrect"
         )
         assert len(button["on_press"]) == 1, f"{path}: duplicate preset actions"
         actions = button["on_press"][0]["then"]
@@ -133,7 +132,33 @@ def check_profile_detection(config):
     print("PASS profile detection: all presets, custom edits, explicit Custom, invalid values")
 
 
+def check_dashboard():
+    """Keep daily controls unique and manual sliders tied to their own switch."""
+    dashboard = yaml.safe_load((ROOT / "examples/home-assistant/fan-controller-dashboard.yaml").read_text())
+    overview, advanced = dashboard["views"]
+    cards = overview["cards"][0]["cards"]
+    controls = cards[0]["entities"]
+    assert [item["entity"] for item in controls if "entity" in item] == [
+        "select.fancontroller_fan_profile",
+        *[f"switch.fancontroller_auto_control_fan_{i}" for i in range(1, 5)],
+    ]
+    assert controls[-1]["tap_action"]["navigation_path"] == "/fan-controller/" + advanced["path"]
+    assert advanced["subview"] is True
+    assert len(cards[1:]) == 4
+    for i, card in enumerate(cards[1:], 1):
+        assert card["type"] == "conditional"
+        assert card["conditions"] == [{
+            "condition": "state", "entity": f"switch.fancontroller_auto_control_fan_{i}", "state": "off",
+        }]
+        assert card["card"]["entity"] == f"fan.fancontroller_fan_{i}"
+        assert card["card"]["features"] == [{"type": "fan-speed"}]
+    numbers = {entity["entity"] for card in advanced["cards"][1:] for entity in card["entities"]}
+    assert numbers == {f"number.fancontroller_curve_{kind}_{i}" for kind in ("temperature", "speed") for i in range(1, 6)}
+    print("PASS dashboard: unique daily controls, conditional manual sliders, advanced tuning")
+
+
 def main():
+    check_dashboard()
     subprocess.run(["python3", "tools/localize-examples.py"], cwd=ROOT, check=True)
     configs = sorted(
         path for path in ROOT.glob("fancontroller-rev*.yaml")

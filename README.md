@@ -103,10 +103,12 @@ The factory firmware exposes all 4 fan channels as speed controls in Home Assist
 Standard firmware for every board revision also includes the **Silent**, **Balanced**, **Aggressive**, and **Server** temperature-curve presets. No ESPHome YAML changes are needed:
 
 1. Open the device in Home Assistant and choose **Fan Profile** under **Controls**.
-2. Set **Fan 1 Mode**, **Fan 2 Mode**, and so on to **Automatic** for the fans you want to follow that profile. Automatic control starts **off**, preserving manual fan settings on first install or upgrade.
+2. Turn on **Auto Control Fan 1**, **Auto Control Fan 2**, and so on for the fans you want to follow that profile. Automatic control starts **off**, preserving manual fan settings on first install or upgrade.
 3. For fine-tuning, enter temperatures and speeds under **Configuration**. The profile shows **Custom** when the points differ from a preset. Selecting **Custom** keeps the current points for editing.
 
-Switch states and curve points are restored after reboot; selecting a profile never enables automatic control by itself. Existing devices need a firmware update containing this feature. The original **Curve Preset** buttons remain available for existing dashboards and automations.
+Switch states and curve points are restored after reboot; selecting a profile never enables automatic control by itself. Existing devices need a firmware update containing this feature. Standard firmware uses one profile dropdown and four automatic switches; duplicate preset buttons are hidden. Turning automatic control off holds the current speed until you adjust the fan manually.
+
+For a simpler daily view, use the [Home Assistant dashboard example](examples/home-assistant/fan-controller-dashboard.yaml): one profile, an automatic toggle per fan, manual percentage sliders that appear only when automatic control is off, and a separate **Advanced settings** page for the five curve points. It uses only built-in Home Assistant cards.
 
 For custom YAML that already imports both a full `fancontroller-rev*.yaml` config and `modules/temperature_curve.yaml`, remove the separate curve import when updating to avoid duplicate entities. Keep your local curve substitutions and overrides. Hardware-only builds still add their control module explicitly.
 

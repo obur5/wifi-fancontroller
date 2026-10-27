@@ -36,6 +36,19 @@ light:
 
 ## Dashboard Setup
 
+### Simple Profile Dashboard
+
+The [complete dashboard example](https://github.com/zeroflow/wifi-fancontroller/blob/main/examples/home-assistant/fan-controller-dashboard.yaml) uses only built-in Home Assistant cards:
+
+- One **Fan profile** dropdown shared by the fans.
+- One **Automatic** toggle per fan. On follows the temperature curve; off allows manual speed control.
+- A manual percentage slider appears for each fan with automatic control off. Set it to 0% to switch the fan off.
+- **Advanced settings** opens a separate page with five temperature/speed pairs. Edits are saved on the controller and the profile shows **Custom** when values differ from a preset.
+
+To install it, create a new dashboard from scratch under **Settings → Dashboards** with URL `fan-controller`. Open its **Raw configuration editor** and paste the example. Replace `fancontroller_` in its entity IDs with your controller's actual prefix from **Developer tools → States**. If you choose a different dashboard URL, update the Advanced settings navigation path too. Exit editing to test conditional slider visibility: Home Assistant shows conditional cards while editing.
+
+Standard firmware contains the profile and switches automatically. The dashboard must be added in Home Assistant because firmware cannot create dashboard pages. Existing custom dashboards can keep using the same fan and switch entities.
+
 ### Fan Control Card
 
 Add a fan entity to your dashboard for direct speed control:

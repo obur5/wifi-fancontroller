@@ -1,0 +1,127 @@
+# Create a dashboard with URL fan-controller and paste this into its raw editor.
+# Replace fancontroller_ in entity IDs with your controller's entity prefix.
+# Uses only built-in Home Assistant cards; no custom card installation is needed.
+title: Fan Controller
+views:
+  - title: Fans
+    path: overview
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: entities
+            title: Fan controller
+            show_header_toggle: false
+            entities:
+              - entity: select.fancontroller_fan_profile
+                name: Fan profile
+              - entity: switch.fancontroller_auto_control_fan_1
+                name: Fan 1 automatic
+                icon: mdi:fan-auto
+              - entity: switch.fancontroller_auto_control_fan_2
+                name: Fan 2 automatic
+                icon: mdi:fan-auto
+              - entity: switch.fancontroller_auto_control_fan_3
+                name: Fan 3 automatic
+                icon: mdi:fan-auto
+              - entity: switch.fancontroller_auto_control_fan_4
+                name: Fan 4 automatic
+                icon: mdi:fan-auto
+              - type: button
+                name: Advanced settings
+                icon: mdi:tune
+                action_name: Open
+                tap_action:
+                  action: navigate
+                  navigation_path: /fan-controller/advanced
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: switch.fancontroller_auto_control_fan_1
+                state: "off"
+            card:
+              type: tile
+              entity: fan.fancontroller_fan_1
+              name: Fan 1 manual speed
+              features:
+                - type: fan-speed
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: switch.fancontroller_auto_control_fan_2
+                state: "off"
+            card:
+              type: tile
+              entity: fan.fancontroller_fan_2
+              name: Fan 2 manual speed
+              features:
+                - type: fan-speed
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: switch.fancontroller_auto_control_fan_3
+                state: "off"
+            card:
+              type: tile
+              entity: fan.fancontroller_fan_3
+              name: Fan 3 manual speed
+              features:
+                - type: fan-speed
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: switch.fancontroller_auto_control_fan_4
+                state: "off"
+            card:
+              type: tile
+              entity: fan.fancontroller_fan_4
+              name: Fan 4 manual speed
+              features:
+                - type: fan-speed
+  - title: Advanced settings
+    path: advanced
+    subview: true
+    cards:
+      - type: markdown
+        content: >-
+          Fine-tune the five curve points. Keep temperatures in ascending order.
+          The profile changes to Custom when you edit a preset.
+      - type: entities
+        title: Curve point 1
+        show_header_toggle: false
+        entities:
+          - entity: number.fancontroller_curve_temperature_1
+            name: Temperature
+          - entity: number.fancontroller_curve_speed_1
+            name: Fan speed
+      - type: entities
+        title: Curve point 2
+        show_header_toggle: false
+        entities:
+          - entity: number.fancontroller_curve_temperature_2
+            name: Temperature
+          - entity: number.fancontroller_curve_speed_2
+            name: Fan speed
+      - type: entities
+        title: Curve point 3
+        show_header_toggle: false
+        entities:
+          - entity: number.fancontroller_curve_temperature_3
+            name: Temperature
+          - entity: number.fancontroller_curve_speed_3
+            name: Fan speed
+      - type: entities
+        title: Curve point 4
+        show_header_toggle: false
+        entities:
+          - entity: number.fancontroller_curve_temperature_4
+            name: Temperature
+          - entity: number.fancontroller_curve_speed_4
+            name: Fan speed
+      - type: entities
+        title: Curve point 5
+        show_header_toggle: false
+        entities:
+          - entity: number.fancontroller_curve_temperature_5
+            name: Temperature
+          - entity: number.fancontroller_curve_speed_5
+            name: Fan speed

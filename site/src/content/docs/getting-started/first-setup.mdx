@@ -92,11 +92,11 @@ This product contains a radio transmitter. Install the product so that a separat
 
 4. **Choose a fan profile (optional)**
 
-   Standard firmware for all board revisions includes **Curve Preset Silent**, **Balanced**, **Aggressive**, and **Server**, plus five editable temperature/speed points. No module needs to be added manually.
+   Standard firmware for all board revisions includes **Silent**, **Balanced**, **Aggressive**, and **Server**, plus five editable temperature/speed points. No module needs to be added manually.
 
-   Open the fan controller's device page in Home Assistant. Under **Controls**, choose a **Fan Profile**, then set the corresponding **Fan Mode** dropdowns to **Automatic**. Automatic control starts **off**, so manual speeds continue until you opt in. Choosing a profile alone does not change which fans use automatic control.
+   Open the fan controller's device page in Home Assistant. Under **Controls**, choose a **Fan Profile**, then turn on the corresponding **Auto Control Fan** switches. Automatic control starts **off**, so manual speeds continue until you opt in. Choosing a profile alone does not change which fans use automatic control.
 
-   To fine-tune the curve, enter temperatures and speeds under **Configuration**. The profile automatically shows **Custom** when the points differ from a preset. Selecting **Custom** keeps your current points for editing. Switch states and curve values are restored after reboot without reapplying a preset over saved edits.
+   Use the [simple dashboard](/getting-started/home-assistant/#simple-profile-dashboard) for a profile, per-fan automatic toggles, and manual percentage sliders that appear when automatic control is off. Open **Advanced settings** to fine-tune the curve; the same values are available under **Configuration** on the device page. The profile automatically shows **Custom** when the points differ from a preset. Selecting **Custom** keeps your current points for editing. Switch states and curve values are restored after reboot without reapplying a preset over saved edits.
 
    If the presets are missing on an existing board, [update its firmware](/getting-started/firmware-updates/) to a version containing this feature. See [Temperature Curve](/reference/modules/temperature-curve/) for the preset values and fine-tuning instructions.
 
