@@ -103,14 +103,14 @@ The factory firmware exposes all 4 fan channels as speed controls in Home Assist
 Standard firmware for every board revision also includes the **Silent**, **Balanced**, **Aggressive**, and **Server** temperature-curve presets. No ESPHome YAML changes are needed:
 
 1. Under **Controls**, choose **Fan 1 profile** through **Fan 4 profile** independently: **Manual**, **Silent**, **Balanced**, **Aggressive**, **Server**, or **Custom**.
-2. Tap a fan to adjust its percentage. That fan alone switches to **Manual** and holds its speed; the other fans keep their own profiles.
-3. Fine-tune each fan's five temperature/speed pairs under **Configuration**, labeled **Fan 1: 1. At temperature** / **Fan 1: 1. Run at**, and so on. There are 40 settings in total. A preset replaces only that fan's ten values. **Custom** keeps its current values for editing.
+2. Tap a fan name to open its percentage slider. Adjusting its running speed selects **Manual** for that fan alone; the other fans keep their own profiles.
+3. Fine-tune each fan's five temperature/speed pairs under **Configuration**, labeled **Fan 1: 1. At temperature** / **Fan 1: 1. Run at**, and so on. There are 40 settings in total. A preset replaces only that fan's ten values. **Custom** uses the five rules currently shown; choosing another preset replaces those rules.
 
 Standard firmware uses four profile selectors and four native fan controls. Shared profile, automatic switches, legacy curve settings, and preset buttons remain internal. New installs start in Manual. On the first upgrade, fans previously using automatic control inherit the saved shared curve and profile; other fans remain Manual. Each fan's mode, rules, state, and automatic participation restore independently on later reboots.
 
 A fan switched off stays off even if its profile is automatic. Turning it on joins its selected temperature profile; fans paused by a 0% curve value can resume as temperature rises. Editing rules while Manual is selected does not alter the fixed speed. No separate dashboard is required.
 
-For custom YAML that already imports both a full `fancontroller-rev*.yaml` config and `modules/temperature_curve.yaml`, remove the separate curve import when updating to avoid duplicate entities. Keep your local curve substitutions and overrides. Hardware-only builds still add their control module explicitly.
+For custom YAML that already imports both a full `fancontroller-rev*.yaml` config and `modules/temperature_curve.yaml`, remove the separate curve import when updating to avoid duplicate entities. Existing shared curve settings seed the first migration. Future per-fan YAML overrides use `fan1_curve_temp1` / `fan1_curve_speed1` through fan 4 and rule 5. Hardware-only builds still add their control module explicitly.
 
 For custom firmware or troubleshooting, see [Installation Methods](#installation-methods) below.
 
