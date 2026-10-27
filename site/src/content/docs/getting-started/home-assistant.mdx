@@ -41,7 +41,7 @@ light:
 No separate dashboard is required. Open **Settings → Devices & services → ESPHome → your controller**:
 
 - **Controls** contains **Fan Profile** and the four fan entities. Separate automatic switches are internal in standard firmware.
-- Choose **Manual**, then tap a fan name to adjust its fixed percentage. The standard device page opens a speed dialog rather than an inline slider.
+- Tap a fan name to open its percentage slider. Changing the speed automatically selects **Manual** and pauses temperature control for all fans, preserving the other fans’ current speeds. You can also select Manual first. The standard device page opens a speed dialog rather than an inline slider.
 - Choose **Silent**, **Balanced**, **Aggressive**, **Server**, or **Custom** for temperature control. Fans that are running follow the curve; fans switched off remain off. Turning a fan on joins temperature control.
 - **Configuration** contains the five temperature/speed pairs for fine-tuning. **Custom** keeps these points and uses them automatically. While Manual is selected, editing the curve has no effect on fan speeds.
 

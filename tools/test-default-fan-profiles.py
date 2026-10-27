@@ -150,27 +150,33 @@ def check_manual_control(config):
     buttons = {item["id"]: item for item in config["button"]}
     source = [
         "#include <cassert>", "#include <cmath>", "#include <string>",
-        "#include <optional>", "#define id(x) x", "using std::optional;",
+        "#include <optional>", "#include <functional>", "#include <vector>", "#define id(x) x", "using std::optional;",
         "bool curve_profile_custom = false, curve_automatic_mode = true, curve_applying_output = false;",
+        "bool curve_user_controls_ready = true;",
         "struct Number { float state = 0; };",
         "Number " + ", ".join(sorted(CURVE_NUMBERS)) + ";",
         "Number fancontroller_temperature{30};",
         "struct Switch { bool state = false; void turn_on() { state = true; } void turn_off() { state = false; } };",
         "Switch auto_control_fan1, auto_control_fan2, auto_control_fan3, auto_control_fan4;",
         "struct Fan; struct Call { Fan *fan; bool state; float speed = -1; void set_speed(float x) { speed = x; } void perform(); };",
-        "struct Fan { bool state = false; float speed = 0; void (*on)(); void (*off)();",
+        "struct Fan { bool state = false; float speed = 0; void (*on)(); void (*off)(); void (*speed_set)(int);",
         "Call turn_on() { return {this, true}; } Call turn_off() { return {this, false}; } };",
-        "void Call::perform() { bool changed = fan->state != state; fan->state = state;",
-        "if (speed >= 0) fan->speed = speed; if (changed) { if (state) fan->on(); else fan->off(); } }",
-        "struct Profile { bool has_state() { return false; } std::string current_option() { return {}; } void update() {} };",
+        "void Call::perform() { bool changed = fan->state != state; float old_speed = fan->speed; fan->state = state;",
+        "if (speed >= 0) fan->speed = speed; if (changed) { if (state) fan->on(); else fan->off(); }",
+        "if (fan->speed != old_speed) fan->speed_set(fan->speed); }",
+        "void choose_profile(std::string x);",
+        "struct ProfileCall { std::string option; void set_option(std::string x) { option = x; } void perform() { choose_profile(option); } };",
+        "struct Profile { bool has_state() { return false; } std::string current_option() { return {}; } void update() {} ProfileCall make_call() { return {}; } };",
         "Profile fan_profile;",
-        "struct Output { void update(); }; Output curve_output_value;",
+        "std::vector<std::function<void()>> deferred;",
+        "void flush_deferred() { auto callbacks = std::move(deferred); deferred.clear(); for (auto callback : callbacks) callback(); }",
+        "struct Output { void update(); void defer(std::function<void()> callback) { deferred.push_back(callback); } }; Output curve_output_value;",
         "struct Button { void (*apply)(); void press() { apply(); } };",
     ]
     for i in range(1, 5):
         source.extend([
-            f"void fan{i}_on(); void fan{i}_off();",
-            f"Fan fan{i}{{false, 0, fan{i}_on, fan{i}_off}};",
+            f"void fan{i}_on(); void fan{i}_off(); void fan{i}_speed(int x);",
+            f"Fan fan{i}{{false, 0, fan{i}_on, fan{i}_off, fan{i}_speed}};",
             f"bool usr_override_fan{i} = false; float fan{i}_safety_floor = 0;",
         ])
     for preset in sorted(PRESETS):
@@ -185,9 +191,9 @@ def check_manual_control(config):
         "void choose_profile(std::string x) {", profile["set_action"]["then"][0]["lambda"], "}",
     ])
     for i in range(1, 5):
-        for action, suffix in (("on_turn_on", "on"), ("on_turn_off", "off")):
+        for action, suffix in (("on_turn_on", "on"), ("on_turn_off", "off"), ("on_speed_set", "speed")):
             source.extend([
-                f"void fan{i}_{suffix}() {{",
+                f"void fan{i}_{suffix}({'int x' if suffix == 'speed' else ''}) {{",
                 fans[f"fan{i}"][action][0]["then"][0]["lambda"], "}",
             ])
     for preset in sorted(PRESETS):
@@ -216,10 +222,22 @@ def check_manual_control(config):
         # A user's Off command must remain Off across curve ticks/profile changes.
         "fan1.turn_off().perform(); assert(!auto_control_fan1.state);",
         'choose_profile("Aggressive"); assert(!fan1.state && !auto_control_fan1.state);',
-        "fan1.turn_on().perform(); assert(fan1.state && auto_control_fan1.state && fan1.speed > 60);",
+        "fan1.turn_on().perform(); flush_deferred(); assert(fan1.state && auto_control_fan1.state && fan1.speed > 60);",
         'choose_profile("Manual"); fan4.turn_on().perform(); fan4.speed = 42;',
         "curve_output_value.update(); assert(!auto_control_fan4.state && fan4.speed == 42);",
         'choose_profile("Custom"); assert(curve_automatic_mode && curve_profile_custom && auto_control_fan4.state);',
+        # Direct speed edits select Manual, while guarded curve changes do not.
+        "auto edit = fan1.turn_on(); edit.set_speed(43); edit.perform(); flush_deferred();",
+        "assert(!curve_automatic_mode && !auto_control_fan1.state && !auto_control_fan4.state && fan1.speed == 43);",
+        "curve_output_value.update(); assert(fan1.speed == 43);",
+        'choose_profile("Server"); assert(curve_automatic_mode && fan1.speed == 75);',
+        # Off -> On + percentage must not be overwritten by the On callback.
+        "fan2.turn_off().perform(); auto from_off = fan2.turn_on(); from_off.set_speed(37); from_off.perform(); flush_deferred();",
+        "assert(!curve_automatic_mode && fan2.state && fan2.speed == 37);",
+        # Restore-time speed events must retain the restored automatic mode.
+        'choose_profile("Server"); curve_user_controls_ready = false;',
+        "auto restore = fan3.turn_on(); restore.set_speed(49); restore.perform(); flush_deferred();",
+        "assert(curve_automatic_mode); curve_user_controls_ready = true;",
         "}",
     ])
     # Verify the actual YAML wraps all output writes with the callback guard.
@@ -233,7 +251,7 @@ def check_manual_control(config):
         path.write_text("\n".join(source))
         subprocess.run(["c++", "-std=c++17", str(path), "-o", str(binary)], check=True)
         subprocess.run([str(binary)], check=True)
-    print("PASS Manual: fixed speeds, curve resume, user Off, curve pause/restart, Custom")
+    print("PASS Manual: fixed speeds, curve resume, user Off, curve pause/restart, Custom, speed edits, startup")
 
 
 def main():

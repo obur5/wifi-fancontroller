@@ -102,7 +102,7 @@ The factory firmware exposes all 4 fan channels as speed controls in Home Assist
 
 Standard firmware for every board revision also includes the **Silent**, **Balanced**, **Aggressive**, and **Server** temperature-curve presets. No ESPHome YAML changes are needed:
 
-1. For fixed speeds, choose **Manual** under **Fan Profile**, then tap each fan to open its percentage slider. Manual holds the current speeds until you change them.
+1. Tap a fan to adjust its percentage: changing the speed automatically selects **Manual** under **Fan Profile** and holds fixed speeds. You can also select Manual first to hold the current speeds. Because the profile is shared, a direct speed change pauses temperature control for all fans.
 2. For temperature control, choose **Silent**, **Balanced**, **Aggressive**, **Server**, or **Custom**. Running fans follow the curve; fans switched off remain off. Switching a fan on joins temperature control.
 3. Fine-tune the five temperature/speed pairs under **Configuration**. **Custom** keeps the current curve for editing; it is still automatic control. While Manual is selected, curve edits do not change fan speeds.
 

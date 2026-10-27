@@ -3,6 +3,19 @@
 substitutions:
   curve_manual_profile: "true"
 
+# Ignore restore-time fan events; only live user speed edits select Manual.
+globals:
+  - id: curve_user_controls_ready
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+esphome:
+  on_boot:
+    - priority: -1000
+      then:
+        - lambda: id(curve_user_controls_ready) = true;
+
 packages:
   temperature_curve: !include temperature_curve.yaml
 
@@ -31,43 +44,103 @@ fan:
   - id: !extend fan1
     on_turn_on:
       - lambda: |-
-          if (id(curve_automatic_mode) && !id(curve_applying_output)) {
+          if (id(curve_user_controls_ready) && id(curve_automatic_mode) &&
+              !id(curve_applying_output)) {
             id(auto_control_fan1).turn_on();
-            id(curve_output_value).update();
+            // A speed change can accompany On. Let that edit select Manual
+            // before applying the curve, rather than overwriting the user's %.
+            id(curve_output_value).defer([]() {
+              if (id(curve_automatic_mode) && id(auto_control_fan1).state)
+                id(curve_output_value).update();
+            });
           }
     on_turn_off:
       - lambda: |-
-          if (!id(curve_applying_output)) id(auto_control_fan1).turn_off();
+          if (id(curve_user_controls_ready) && !id(curve_applying_output))
+            id(auto_control_fan1).turn_off();
+    on_speed_set:
+      - lambda: |-
+          if (id(curve_user_controls_ready) && id(curve_automatic_mode) &&
+              !id(curve_applying_output)) {
+            auto call = id(fan_profile).make_call();
+            call.set_option("Manual");
+            call.perform();
+          }
   - id: !extend fan2
     on_turn_on:
       - lambda: |-
-          if (id(curve_automatic_mode) && !id(curve_applying_output)) {
+          if (id(curve_user_controls_ready) && id(curve_automatic_mode) &&
+              !id(curve_applying_output)) {
             id(auto_control_fan2).turn_on();
-            id(curve_output_value).update();
+            // A speed change can accompany On. Let that edit select Manual
+            // before applying the curve, rather than overwriting the user's %.
+            id(curve_output_value).defer([]() {
+              if (id(curve_automatic_mode) && id(auto_control_fan2).state)
+                id(curve_output_value).update();
+            });
           }
     on_turn_off:
       - lambda: |-
-          if (!id(curve_applying_output)) id(auto_control_fan2).turn_off();
+          if (id(curve_user_controls_ready) && !id(curve_applying_output))
+            id(auto_control_fan2).turn_off();
+    on_speed_set:
+      - lambda: |-
+          if (id(curve_user_controls_ready) && id(curve_automatic_mode) &&
+              !id(curve_applying_output)) {
+            auto call = id(fan_profile).make_call();
+            call.set_option("Manual");
+            call.perform();
+          }
   - id: !extend fan3
     on_turn_on:
       - lambda: |-
-          if (id(curve_automatic_mode) && !id(curve_applying_output)) {
+          if (id(curve_user_controls_ready) && id(curve_automatic_mode) &&
+              !id(curve_applying_output)) {
             id(auto_control_fan3).turn_on();
-            id(curve_output_value).update();
+            // A speed change can accompany On. Let that edit select Manual
+            // before applying the curve, rather than overwriting the user's %.
+            id(curve_output_value).defer([]() {
+              if (id(curve_automatic_mode) && id(auto_control_fan3).state)
+                id(curve_output_value).update();
+            });
           }
     on_turn_off:
       - lambda: |-
-          if (!id(curve_applying_output)) id(auto_control_fan3).turn_off();
+          if (id(curve_user_controls_ready) && !id(curve_applying_output))
+            id(auto_control_fan3).turn_off();
+    on_speed_set:
+      - lambda: |-
+          if (id(curve_user_controls_ready) && id(curve_automatic_mode) &&
+              !id(curve_applying_output)) {
+            auto call = id(fan_profile).make_call();
+            call.set_option("Manual");
+            call.perform();
+          }
   - id: !extend fan4
     on_turn_on:
       - lambda: |-
-          if (id(curve_automatic_mode) && !id(curve_applying_output)) {
+          if (id(curve_user_controls_ready) && id(curve_automatic_mode) &&
+              !id(curve_applying_output)) {
             id(auto_control_fan4).turn_on();
-            id(curve_output_value).update();
+            // A speed change can accompany On. Let that edit select Manual
+            // before applying the curve, rather than overwriting the user's %.
+            id(curve_output_value).defer([]() {
+              if (id(curve_automatic_mode) && id(auto_control_fan4).state)
+                id(curve_output_value).update();
+            });
           }
     on_turn_off:
       - lambda: |-
-          if (!id(curve_applying_output)) id(auto_control_fan4).turn_off();
+          if (id(curve_user_controls_ready) && !id(curve_applying_output))
+            id(auto_control_fan4).turn_off();
+    on_speed_set:
+      - lambda: |-
+          if (id(curve_user_controls_ready) && id(curve_automatic_mode) &&
+              !id(curve_applying_output)) {
+            auto call = id(fan_profile).make_call();
+            call.set_option("Manual");
+            call.perform();
+          }
 
 # The profile dropdown replaces the four preset buttons in standard firmware.
 # Keep their actions internally so preset selection still uses one implementation.

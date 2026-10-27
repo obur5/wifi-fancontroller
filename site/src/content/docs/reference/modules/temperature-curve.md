@@ -71,7 +71,7 @@ A curve point of 0% drives the PWM output to 0%. Whether the fan then stops or h
 
 In standard firmware, **Fan Profile** offers **Manual**, **Silent**, **Balanced**, **Aggressive**, **Server**, and **Custom**:
 
-- **Manual** disables automatic control for every fan and holds current speeds. Tap a native fan control to adjust its fixed percentage.
+- **Manual** disables automatic control for every fan and holds current speeds. Tap a native fan control to adjust its fixed percentage. Changing any native fan percentage also selects Manual automatically; other fans hold their current speeds. Curve-generated speed updates and restore-time events do not select Manual.
 - A preset or **Custom** enables automatic control for running fans and any fans paused by the curve at 0%. Fans explicitly switched off remain off. Switching a fan on joins automatic control.
 - **Custom** keeps your current temperature rules and uses them automatically. It does not mean manual fan speed.
 
