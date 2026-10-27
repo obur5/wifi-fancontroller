@@ -143,7 +143,7 @@ def check_dashboard():
         *[f"switch.fancontroller_auto_control_fan_{i}" for i in range(1, 5)],
     ]
     assert controls[-1]["tap_action"]["navigation_path"] == "/fan-controller/" + advanced["path"]
-    assert advanced["subview"] is True
+    assert not advanced.get("subview", False), "Advanced settings must be a visible tab"
     assert len(cards[1:]) == 4
     for i, card in enumerate(cards[1:], 1):
         assert card["type"] == "conditional"

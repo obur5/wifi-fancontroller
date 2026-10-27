@@ -43,7 +43,7 @@ The [complete dashboard example](https://github.com/zeroflow/wifi-fancontroller/
 - One **Fan profile** dropdown shared by the fans.
 - One **Automatic** toggle per fan. On follows the temperature curve; off allows manual speed control.
 - A manual percentage slider appears for each fan with automatic control off. Set it to 0% to switch the fan off.
-- **Advanced settings** opens a separate page with five temperature/speed pairs. Edits are saved on the controller and the profile shows **Custom** when values differ from a preset.
+- The visible **Advanced settings** tab next to **Fans** opens a page with five temperature/speed pairs. Edits are saved on the controller and the profile shows **Custom** when values differ from a preset.
 
 To install it, create a new dashboard from scratch under **Settings → Dashboards** with URL `fan-controller`. Open its **Raw configuration editor** and paste the example. Replace `fancontroller_` in its entity IDs with your controller's actual prefix from **Developer tools → States**. If you choose a different dashboard URL, update the Advanced settings navigation path too. Exit editing to test conditional slider visibility: Home Assistant shows conditional cards while editing.
 

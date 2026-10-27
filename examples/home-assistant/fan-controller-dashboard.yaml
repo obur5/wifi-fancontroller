@@ -79,7 +79,6 @@ views:
                 - type: fan-speed
   - title: Advanced settings
     path: advanced
-    subview: true
     cards:
       - type: markdown
         content: >-
