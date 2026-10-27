@@ -40,14 +40,14 @@ light:
 
 No separate dashboard is required. Open **Settings → Devices & services → ESPHome → your controller**:
 
-- **Controls** contains **Fan Profile** and the four fan entities. Separate automatic switches are internal in standard firmware.
-- Tap a fan name to open its percentage slider. Changing the speed automatically selects **Manual** and pauses temperature control for all fans, preserving the other fans’ current speeds. You can also select Manual first. The standard device page opens a speed dialog rather than an inline slider.
-- Choose **Silent**, **Balanced**, **Aggressive**, **Server**, or **Custom** for temperature control. Fans that are running follow the curve; fans switched off remain off. Turning a fan on joins temperature control.
-- **Configuration** contains the five temperature/speed pairs for fine-tuning. **Custom** keeps these points and uses them automatically. While Manual is selected, editing the curve has no effect on fan speeds.
+- **Controls** contains four fan entities and **Fan 1 profile** through **Fan 4 profile**. Each selector offers Manual, Silent, Balanced, Aggressive, Server, and Custom.
+- Tap a fan name to change its percentage. Only that fan switches to **Manual**; all other profiles continue unchanged.
+- Choose an automatic profile for a fan to follow its own curve. A switched-off fan stays off until switched on; a fan paused at 0% by its curve can resume as temperature rises.
+- **Configuration** contains five temperature/speed pairs for each fan (40 settings total). Labels such as **Fan 1: 1. At temperature** / **Fan 1: 1. Run at** keep each fan's rules together. Selecting a preset replaces only that fan's rules; Custom keeps them for editing.
 
-For simpler labels, open an entity, select its settings cog, change **Name**, and save. Leave **Entity ID** unchanged to preserve automations. Suggested names are **1. At temperature** / **1. Run fans at** through rule 5. Home Assistant display names are local customizations; the firmware keeps its existing names so an update does not create replacement entities.
+Read each pair as a sentence: **at 22 °C, run this fan at 30%**. Speed changes smoothly between rules: with the next rule **28 °C → 60%**, the fan uses **45% at 25 °C**. Keep each fan's temperatures increasing from rule 1 to rule 5. Editing rules in Manual does not change its fixed speed. Profile and rule changes for one fan never overwrite another fan's settings.
 
-The five pairs are temperature rules shared by fans participating in automatic control. Read each pair as a sentence: **at 22 °C, run fans at 30%**. The controller changes speed smoothly between rules: if the next rule is **28 °C → 60%**, it uses **45% at 25 °C**. Keep temperatures increasing from rule 1 to rule 5. Selecting a preset fills in all five rules, so editing is only needed for a custom curve.
+On first upgrade, each previously automatic fan receives a copy of the old shared curve; manual fans stay Manual. Later reboots preserve each fan's saved mode and rules without reapplying a preset. The old shared controls are internal, so existing automations targeting **Fan Profile** should be updated to target the appropriate per-fan selector. Native fan entity IDs are unchanged.
 
 ### Fan Control Card
 

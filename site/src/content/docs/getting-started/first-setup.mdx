@@ -94,9 +94,9 @@ This product contains a radio transmitter. Install the product so that a separat
 
    Standard firmware for all board revisions includes **Silent**, **Balanced**, **Aggressive**, and **Server**, plus five editable temperature/speed points. No module needs to be added manually.
 
-   On the device page under **Controls**, tap a fan name to open its percentage slider. Changing its speed automatically selects **Manual** in **Fan Profile**, holding fixed percentages for all fans. You can also choose Manual first. Choose **Silent**, **Balanced**, **Aggressive**, **Server**, or **Custom** for temperature control. Running fans follow the curve; switched-off fans stay off until you turn them on. No separate automatic switches are needed.
+   Under **Controls**, each fan has its own **Fan 1 profile** through **Fan 4 profile**. Choose **Manual**, **Silent**, **Balanced**, **Aggressive**, **Server**, or **Custom** independently. Tap a fan to adjust its percentage; only that fan switches to Manual. The others continue their selected profiles.
 
-   Fine-tune the five temperature/speed pairs under **Configuration**. **Custom** means your own automatic temperature curve; **Manual** means fixed fan percentages. First-time installs start in Manual; existing automatic choices are preserved on upgrade. Mode and curve values restore after reboot without reapplying a preset over saved edits.
+   **Configuration** contains five temperature/speed pairs per fan (40 settings total). Selecting a preset fills in only that fan's rules; Custom keeps its current values for editing. Rules, profiles, and fan state restore after reboot. On upgrade, existing automatic fans inherit the previous saved curve; manual fans remain Manual. No dashboard or separate automatic switches are needed.
 
    If the presets are missing on an existing board, [update its firmware](/getting-started/firmware-updates/) to a version containing this feature. See [Temperature Curve](/reference/modules/temperature-curve/) for the preset values and fine-tuning instructions.
 

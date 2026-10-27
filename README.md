@@ -102,13 +102,13 @@ The factory firmware exposes all 4 fan channels as speed controls in Home Assist
 
 Standard firmware for every board revision also includes the **Silent**, **Balanced**, **Aggressive**, and **Server** temperature-curve presets. No ESPHome YAML changes are needed:
 
-1. Tap a fan to adjust its percentage: changing the speed automatically selects **Manual** under **Fan Profile** and holds fixed speeds. You can also select Manual first to hold the current speeds. Because the profile is shared, a direct speed change pauses temperature control for all fans.
-2. For temperature control, choose **Silent**, **Balanced**, **Aggressive**, **Server**, or **Custom**. Running fans follow the curve; fans switched off remain off. Switching a fan on joins temperature control.
-3. Fine-tune the five temperature/speed pairs under **Configuration**. **Custom** keeps the current curve for editing; it is still automatic control. While Manual is selected, curve edits do not change fan speeds.
+1. Under **Controls**, choose **Fan 1 profile** through **Fan 4 profile** independently: **Manual**, **Silent**, **Balanced**, **Aggressive**, **Server**, or **Custom**.
+2. Tap a fan to adjust its percentage. That fan alone switches to **Manual** and holds its speed; the other fans keep their own profiles.
+3. Fine-tune each fan's five temperature/speed pairs under **Configuration**, labeled **Fan 1: 1. At temperature** / **Fan 1: 1. Run at**, and so on. There are 40 settings in total. A preset replaces only that fan's ten values. **Custom** keeps its current values for editing.
 
-Standard firmware uses one profile dropdown and four native fan controls. Separate automatic switches and duplicate preset buttons are internal. First-time installs start in **Manual**; upgrades preserve existing automatic choices. Mode, curve points, fan states, and automatic participation restore after reboot without reapplying a preset. Existing devices need firmware containing this feature.
+Standard firmware uses four profile selectors and four native fan controls. Shared profile, automatic switches, legacy curve settings, and preset buttons remain internal. New installs start in Manual. On the first upgrade, fans previously using automatic control inherit the saved shared curve and profile; other fans remain Manual. Each fan's mode, rules, state, and automatic participation restore independently on later reboots.
 
-Use the device page directly: **Controls** contains the profile and fans, and **Configuration** contains the five temperature/speed pairs. No separate dashboard is required. In Home Assistant, you can rename the tuning fields to **1. At temperature** / **1. Run fans at** through rule 5, without changing entity IDs.
+A fan switched off stays off even if its profile is automatic. Turning it on joins its selected temperature profile; fans paused by a 0% curve value can resume as temperature rises. Editing rules while Manual is selected does not alter the fixed speed. No separate dashboard is required.
 
 For custom YAML that already imports both a full `fancontroller-rev*.yaml` config and `modules/temperature_curve.yaml`, remove the separate curve import when updating to avoid duplicate entities. Keep your local curve substitutions and overrides. Hardware-only builds still add their control module explicitly.
 
