@@ -132,33 +132,7 @@ def check_profile_detection(config):
     print("PASS profile detection: all presets, custom edits, explicit Custom, invalid values")
 
 
-def check_dashboard():
-    """Keep daily controls unique and manual sliders tied to their own switch."""
-    dashboard = yaml.safe_load((ROOT / "examples/home-assistant/fan-controller-dashboard.yaml").read_text())
-    overview, advanced = dashboard["views"]
-    cards = overview["cards"][0]["cards"]
-    controls = cards[0]["entities"]
-    assert [item["entity"] for item in controls if "entity" in item] == [
-        "select.fancontroller_fan_profile",
-        *[f"switch.fancontroller_auto_control_fan_{i}" for i in range(1, 5)],
-    ]
-    assert controls[-1]["tap_action"]["navigation_path"] == "/fan-controller/" + advanced["path"]
-    assert not advanced.get("subview", False), "Advanced settings must be a visible tab"
-    assert len(cards[1:]) == 4
-    for i, card in enumerate(cards[1:], 1):
-        assert card["type"] == "conditional"
-        assert card["conditions"] == [{
-            "condition": "state", "entity": f"switch.fancontroller_auto_control_fan_{i}", "state": "off",
-        }]
-        assert card["card"]["entity"] == f"fan.fancontroller_fan_{i}"
-        assert card["card"]["features"] == [{"type": "fan-speed"}]
-    numbers = {entity["entity"] for card in advanced["cards"][1:] for entity in card["entities"]}
-    assert numbers == {f"number.fancontroller_curve_{kind}_{i}" for kind in ("temperature", "speed") for i in range(1, 6)}
-    print("PASS dashboard: unique daily controls, conditional manual sliders, advanced tuning")
-
-
 def main():
-    check_dashboard()
     subprocess.run(["python3", "tools/localize-examples.py"], cwd=ROOT, check=True)
     configs = sorted(
         path for path in ROOT.glob("fancontroller-rev*.yaml")

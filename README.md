@@ -108,7 +108,7 @@ Standard firmware for every board revision also includes the **Silent**, **Balan
 
 Switch states and curve points are restored after reboot; selecting a profile never enables automatic control by itself. Existing devices need a firmware update containing this feature. Standard firmware uses one profile dropdown and four automatic switches; duplicate preset buttons are hidden. Turning automatic control off holds the current speed until you adjust the fan manually.
 
-For a simpler daily view, use the [Home Assistant dashboard example](examples/home-assistant/fan-controller-dashboard.yaml): one profile, an automatic toggle per fan, manual percentage sliders that appear only when automatic control is off, and a separate **Advanced settings** page for the five curve points. It uses only built-in Home Assistant cards.
+Use the device page directly: **Controls** contains the profile and fans, and **Configuration** contains the five temperature/speed pairs. Tap a fan to open its percentage slider after switching automatic control off. No separate dashboard is required. In Home Assistant, you can rename the automatic switches to **Fan 1 automatic** through **Fan 4 automatic**, and the tuning fields to **Point 1 temperature** / **Point 1 speed** through point 5, without changing entity IDs.
 
 For custom YAML that already imports both a full `fancontroller-rev*.yaml` config and `modules/temperature_curve.yaml`, remove the separate curve import when updating to avoid duplicate entities. Keep your local curve substitutions and overrides. Hardware-only builds still add their control module explicitly.
 
