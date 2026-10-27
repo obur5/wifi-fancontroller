@@ -1,30 +1,73 @@
-# Profile controls included in the standard firmware for every board revision.
-# Keep first-time installs and upgrades in manual control until the user opts in.
-# RESTORE_DEFAULT_OFF preserves an existing auto-control choice across reboots.
+# One profile chooses Manual or automatic temperature control in standard firmware.
+# Keep internal switch IDs/restored states for migration and custom integrations.
+substitutions:
+  curve_manual_profile: "true"
+
 packages:
   temperature_curve: !include temperature_curve.yaml
+
+select:
+  - id: !extend fan_profile
+    options:
+      - Manual
 
 switch:
   - id: !extend auto_control_fan1
     restore_mode: RESTORE_DEFAULT_OFF
-    entity_category: ""
-    on_turn_on:
-      - component.update: curve_output_value
+    internal: true
   - id: !extend auto_control_fan2
     restore_mode: RESTORE_DEFAULT_OFF
-    entity_category: ""
-    on_turn_on:
-      - component.update: curve_output_value
+    internal: true
   - id: !extend auto_control_fan3
     restore_mode: RESTORE_DEFAULT_OFF
-    entity_category: ""
-    on_turn_on:
-      - component.update: curve_output_value
+    internal: true
   - id: !extend auto_control_fan4
     restore_mode: RESTORE_DEFAULT_OFF
-    entity_category: ""
+    internal: true
+
+# Native fan controls select which fans run. Curve-paused fans remain eligible
+# to restart as temperature rises; user-stopped fans remain off.
+fan:
+  - id: !extend fan1
     on_turn_on:
-      - component.update: curve_output_value
+      - lambda: |-
+          if (id(curve_automatic_mode) && !id(curve_applying_output)) {
+            id(auto_control_fan1).turn_on();
+            id(curve_output_value).update();
+          }
+    on_turn_off:
+      - lambda: |-
+          if (!id(curve_applying_output)) id(auto_control_fan1).turn_off();
+  - id: !extend fan2
+    on_turn_on:
+      - lambda: |-
+          if (id(curve_automatic_mode) && !id(curve_applying_output)) {
+            id(auto_control_fan2).turn_on();
+            id(curve_output_value).update();
+          }
+    on_turn_off:
+      - lambda: |-
+          if (!id(curve_applying_output)) id(auto_control_fan2).turn_off();
+  - id: !extend fan3
+    on_turn_on:
+      - lambda: |-
+          if (id(curve_automatic_mode) && !id(curve_applying_output)) {
+            id(auto_control_fan3).turn_on();
+            id(curve_output_value).update();
+          }
+    on_turn_off:
+      - lambda: |-
+          if (!id(curve_applying_output)) id(auto_control_fan3).turn_off();
+  - id: !extend fan4
+    on_turn_on:
+      - lambda: |-
+          if (id(curve_automatic_mode) && !id(curve_applying_output)) {
+            id(auto_control_fan4).turn_on();
+            id(curve_output_value).update();
+          }
+    on_turn_off:
+      - lambda: |-
+          if (!id(curve_applying_output)) id(auto_control_fan4).turn_off();
 
 # The profile dropdown replaces the four preset buttons in standard firmware.
 # Keep their actions internally so preset selection still uses one implementation.

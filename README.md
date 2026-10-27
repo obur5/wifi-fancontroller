@@ -102,13 +102,13 @@ The factory firmware exposes all 4 fan channels as speed controls in Home Assist
 
 Standard firmware for every board revision also includes the **Silent**, **Balanced**, **Aggressive**, and **Server** temperature-curve presets. No ESPHome YAML changes are needed:
 
-1. Open the device in Home Assistant and choose **Fan Profile** under **Controls**.
-2. Turn on **Auto Control Fan 1**, **Auto Control Fan 2**, and so on for the fans you want to follow that profile. Automatic control starts **off**, preserving manual fan settings on first install or upgrade.
-3. For fine-tuning, enter temperatures and speeds under **Configuration**. The profile shows **Custom** when the points differ from a preset. Selecting **Custom** keeps the current points for editing.
+1. For fixed speeds, choose **Manual** under **Fan Profile**, then tap each fan to open its percentage slider. Manual holds the current speeds until you change them.
+2. For temperature control, choose **Silent**, **Balanced**, **Aggressive**, **Server**, or **Custom**. Running fans follow the curve; fans switched off remain off. Switching a fan on joins temperature control.
+3. Fine-tune the five temperature/speed pairs under **Configuration**. **Custom** keeps the current curve for editing; it is still automatic control. While Manual is selected, curve edits do not change fan speeds.
 
-Switch states and curve points are restored after reboot; selecting a profile never enables automatic control by itself. Existing devices need a firmware update containing this feature. Standard firmware uses one profile dropdown and four automatic switches; duplicate preset buttons are hidden. Turning automatic control off holds the current speed until you adjust the fan manually.
+Standard firmware uses one profile dropdown and four native fan controls. Separate automatic switches and duplicate preset buttons are internal. First-time installs start in **Manual**; upgrades preserve existing automatic choices. Mode, curve points, fan states, and automatic participation restore after reboot without reapplying a preset. Existing devices need firmware containing this feature.
 
-Use the device page directly: **Controls** contains the profile and fans, and **Configuration** contains the five temperature/speed pairs. Tap a fan to open its percentage slider after switching automatic control off. No separate dashboard is required. In Home Assistant, you can rename the automatic switches to **Fan 1 automatic** through **Fan 4 automatic**, and the tuning fields to **1. At temperature** / **1. Run fans at** through point 5, without changing entity IDs.
+Use the device page directly: **Controls** contains the profile and fans, and **Configuration** contains the five temperature/speed pairs. No separate dashboard is required. In Home Assistant, you can rename the tuning fields to **1. At temperature** / **1. Run fans at** through rule 5, without changing entity IDs.
 
 For custom YAML that already imports both a full `fancontroller-rev*.yaml` config and `modules/temperature_curve.yaml`, remove the separate curve import when updating to avoid duplicate entities. Keep your local curve substitutions and overrides. Hardware-only builds still add their control module explicitly.
 

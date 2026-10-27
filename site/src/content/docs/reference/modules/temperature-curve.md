@@ -14,7 +14,7 @@ Works with all hardware revisions (Rev 1.0 through Rev 3.3).
 The Temperature Curve module lets you define a custom 5-point temperature-to-speed curve for granular control over fan behavior. Values between points are linearly interpolated, giving you a smooth speed transition across the entire temperature range.
 
 :::tip[Included in standard firmware]
-Standard firmware for every board revision includes this module's presets and tuning controls through `modules/default_fan_profiles.yaml`. Under **Controls** on the Home Assistant device page, choose **Fan Profile**, then turn on **Auto Control Fan 1**, **Auto Control Fan 2**, and so on for each fan that should follow the curve. Automatic control starts **off**. Existing devices need a firmware update containing this feature. Custom builds using only a hardware package still add the curve module explicitly.
+Standard firmware includes this module through `modules/default_fan_profiles.yaml`. Choose **Manual** for fixed fan percentages, or a temperature profile for automatic control, under **Controls** on the Home Assistant device page. First-time installs start in Manual; existing automatic choices are retained on upgrade. Hardware-only builds still add the curve module explicitly. Direct module imports retain the per-fan automatic switches described below.
 :::
 
 :::note[Updating an existing custom configuration]
@@ -69,13 +69,17 @@ A curve point of 0% drives the PWM output to 0%. Whether the fan then stops or h
 
 ### Fan Profile
 
-The **Fan Profile** dropdown under **Controls** offers **Silent**, **Balanced**, **Aggressive**, **Server**, and **Custom**. Choose a preset, then enable the corresponding **Auto Control Fan** switches. Profile selection never changes those switches. Turning automatic control off holds the fan's current speed; use its normal fan controls to change or stop it.
+In standard firmware, **Fan Profile** offers **Manual**, **Silent**, **Balanced**, **Aggressive**, **Server**, and **Custom**:
 
-The dropdown reflects the actual curve points. Editing a temperature or speed automatically shows **Custom** if the values no longer match a preset. Choosing **Custom** explicitly keeps the current points for fine-tuning. Temperatures and speeds use numeric input boxes under **Configuration**, so you can enter exact values without dragging sliders.
+- **Manual** disables automatic control for every fan and holds current speeds. Tap a native fan control to adjust its fixed percentage.
+- A preset or **Custom** enables automatic control for running fans and any fans paused by the curve at 0%. Fans explicitly switched off remain off. Switching a fan on joins automatic control.
+- **Custom** keeps your current temperature rules and uses them automatically. It does not mean manual fan speed.
 
-On reboot, saved curve points are restored and the displayed profile is derived from them. No preset is automatically reapplied over your edits. Standard firmware hides duplicate preset buttons. Direct module imports still expose the buttons for existing dashboards and automations; pressing one also updates the dropdown.
+The selector derives the curve name from saved points. Editing a temperature or speed shows **Custom** when the points no longer match a preset, unless Manual is selected. Selecting **Custom** explicitly keeps the points. Mode, curve values, and automatic participation restore after reboot without reapplying a preset.
 
-Use **Controls** and **Configuration** on the Home Assistant device page; no dashboard is required. Turn a fan's automatic switch off, then tap that fan to open its manual percentage slider. The standard device page does not conditionally show inline sliders. For clearer labels, rename entities in Home Assistant without changing their entity IDs; for example **Fan 1 automatic**, **1. At temperature**, and **1. Run fans at**.
+Standard firmware hides the per-fan automatic switches and duplicate preset buttons. Direct imports of this module retain their original switches, default-on behavior, preset buttons, and preset-only selector: choosing a profile there does not change which fans are automatic.
+
+Use **Controls** and **Configuration** on the device page; no dashboard is required. For clearer tuning labels, rename entities in Home Assistant without changing entity IDs; for example **1. At temperature** and **1. Run fans at**. Each pair means “at this temperature, run fans at this percentage,” with smooth speed changes between pairs.
 
 ### Number Entities
 
@@ -124,7 +128,7 @@ Presets only affect fans whose **Auto Control Fan** switch is on and which are n
 | Auto Control Fan 3 | ON      | Enable curve control for fan 3 |
 | Auto Control Fan 4 | ON      | Enable curve control for fan 4 |
 
-These defaults apply when importing `modules/temperature_curve.yaml` directly. Standard firmware overrides all four to **OFF** on first use and puts these switches under **Controls**, alongside **Fan Profile**. There is no second mode selector. Enabling a switch immediately applies the curve; disabling it leaves the current fan speed ready for manual adjustment. Both configurations restore saved switch states on subsequent reboots.
+These defaults apply when importing `modules/temperature_curve.yaml` directly. Standard firmware makes these switches internal and defaults them to **OFF** on first use. **Fan Profile → Manual** disables all four; a temperature profile resumes running/curve-paused fans. Native fan on/off commands control participation, and curve-generated 0% pauses retain it. Existing saved switch states are retained on upgrade and restored on subsequent reboots.
 
 ### Binary Sensor
 

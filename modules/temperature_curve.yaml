@@ -56,6 +56,9 @@ substitutions:
   friendly_name: "Fancontroller" # default
   # Sensor supplying the control temperature. Defaults to the onboard sensor
   temperature_sensor_id: fancontroller_temperature
+  # Standard firmware enables the shared Manual profile; direct module imports
+  # keep their existing per-fan automatic switches and preset-only selector.
+  curve_manual_profile: "false"
   # Default: Balanced curve
   curve_temp1: "20.0"
   curve_speed1: "0.0"
@@ -80,12 +83,29 @@ globals:
     restore_value: true
     initial_value: "false"
 
+  # Shared operating mode used only by the standard-firmware wrapper.
+  - id: curve_automatic_mode
+    type: bool
+    restore_value: true
+    initial_value: "false"
+  # Fan on/off callbacks must distinguish curve writes from user commands.
+  - id: curve_applying_output
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
 # Validate configuration at boot
 esphome:
   on_boot:
     - priority: -100 # Run late, after numbers are initialized
       then:
         - lambda: |-
+            // Migrate existing per-fan automatic choices without starting fans.
+            if (${curve_manual_profile} &&
+                (id(auto_control_fan1).state || id(auto_control_fan2).state ||
+                 id(auto_control_fan3).state || id(auto_control_fan4).state)) {
+              id(curve_automatic_mode) = true;
+            }
             ESP_LOGI("temperature_curve", "Control sensor: ${temperature_sensor_id}");
 
             // Check if temperature points are monotonically increasing
@@ -279,6 +299,7 @@ select:
           return {};
         return std::string(name);
       };
+      if (${curve_manual_profile} && !id(curve_automatic_mode)) return label("Manual");
       if (id(curve_profile_custom)) return label("Custom");
       const float values[10] = {
         id(curve_temp1).state, id(curve_speed1).state,
@@ -308,12 +329,30 @@ select:
       return label("Custom");
     set_action:
       - lambda: |-
+          if (${curve_manual_profile}) {
+            if (x == "Manual") {
+              id(curve_automatic_mode) = false;
+              id(auto_control_fan1).turn_off();
+              id(auto_control_fan2).turn_off();
+              id(auto_control_fan3).turn_off();
+              id(auto_control_fan4).turn_off();
+              id(fan_profile).update();
+              return;
+            }
+            id(curve_automatic_mode) = true;
+            // Resume running/curve-paused fans; an explicitly stopped fan stays off.
+            if (id(fan1).state || id(auto_control_fan1).state) id(auto_control_fan1).turn_on();
+            if (id(fan2).state || id(auto_control_fan2).state) id(auto_control_fan2).turn_on();
+            if (id(fan3).state || id(auto_control_fan3).state) id(auto_control_fan3).turn_on();
+            if (id(fan4).state || id(auto_control_fan4).state) id(auto_control_fan4).turn_on();
+          }
           if (x == "Silent") id(curve_preset_silent).press();
           else if (x == "Balanced") id(curve_preset_balanced).press();
           else if (x == "Aggressive") id(curve_preset_aggressive).press();
           else if (x == "Server") id(curve_preset_server).press();
           else {
             id(curve_profile_custom) = true;
+            if (${curve_manual_profile}) id(curve_output_value).update();
             id(fan_profile).update();
           }
 
@@ -545,9 +584,11 @@ sensor:
       return 0.0;
     on_value:
       then:
+        - lambda: id(curve_applying_output) = true;
         - output.set_level:
             id: curve_proxy_output
             level: !lambda "return x / 100.0;"
+        - lambda: id(curve_applying_output) = false;
 
 output:
   - platform: template

@@ -7,7 +7,7 @@
 packages:
   # Include hardware-specific configuration
   hardware: github://zeroflow/wifi-fancontroller/hardware-rev-3.3.yaml@main
-  # Include preset buttons and curve tuning; automatic control starts off.
+  # Include Manual mode, temperature profiles, and custom curve tuning.
   fan_profiles: !include modules/default_fan_profiles.yaml
 
 esphome:

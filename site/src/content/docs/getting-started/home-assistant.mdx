@@ -40,13 +40,14 @@ light:
 
 No separate dashboard is required. Open **Settings → Devices & services → ESPHome → your controller**:
 
-- **Controls** contains **Fan Profile**, the four fan entities, and the automatic-control switches in current standard firmware. If grouping is stale after updating, reload the ESPHome integration.
-- **Configuration** contains the five temperature/speed pairs for fine-tuning. Edits are saved on the controller; **Fan Profile** shows **Custom** when they differ from a preset.
-- To adjust a fan manually, turn its automatic switch off, then tap the fan name to open its percentage slider. The standard device page does not support conditional inline sliders.
+- **Controls** contains **Fan Profile** and the four fan entities. Separate automatic switches are internal in standard firmware.
+- Choose **Manual**, then tap a fan name to adjust its fixed percentage. The standard device page opens a speed dialog rather than an inline slider.
+- Choose **Silent**, **Balanced**, **Aggressive**, **Server**, or **Custom** for temperature control. Fans that are running follow the curve; fans switched off remain off. Turning a fan on joins temperature control.
+- **Configuration** contains the five temperature/speed pairs for fine-tuning. **Custom** keeps these points and uses them automatically. While Manual is selected, editing the curve has no effect on fan speeds.
 
-For simpler labels, open an entity, select its settings cog, change **Name**, and save. Leave **Entity ID** unchanged to preserve automations. Suggested names are **Fan 1 automatic** through **Fan 4 automatic**, and **1. At temperature** / **1. Run fans at** through point 5. Home Assistant display names are local customizations; the firmware keeps its existing names so an update does not create replacement entities.
+For simpler labels, open an entity, select its settings cog, change **Name**, and save. Leave **Entity ID** unchanged to preserve automations. Suggested names are **1. At temperature** / **1. Run fans at** through rule 5. Home Assistant display names are local customizations; the firmware keeps its existing names so an update does not create replacement entities.
 
-The five pairs are temperature rules shared by fans with automatic control on. Read each pair as a sentence: **at 22 °C, run fans at 30%**. The controller changes speed smoothly between rules: if the next rule is **28 °C → 60%**, it uses **45% at 25 °C**. Keep temperatures increasing from rule 1 to rule 5. Selecting a preset fills in all five rules, so editing is only needed for a custom curve.
+The five pairs are temperature rules shared by fans participating in automatic control. Read each pair as a sentence: **at 22 °C, run fans at 30%**. The controller changes speed smoothly between rules: if the next rule is **28 °C → 60%**, it uses **45% at 25 °C**. Keep temperatures increasing from rule 1 to rule 5. Selecting a preset fills in all five rules, so editing is only needed for a custom curve.
 
 ### Fan Control Card
 
